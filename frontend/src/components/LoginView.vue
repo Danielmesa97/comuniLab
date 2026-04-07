@@ -1,6 +1,6 @@
-//Inicio de Sesion
+
 <script setup>
-import {ref} from Vue
+import {ref} from 'vue'
 const isLogin=ref(true)</script>
 <template>
     <div class="main-container">

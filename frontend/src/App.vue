@@ -1,8 +1,7 @@
 <template>
   <div id="app-container">
-    <nav v-if="$route.path !== '/'">
-      <router-link to="/">LoginView</router-link> |
-      <router-link to="/">Incidencias</router-link> |
+    <nav v-if="route && route.path !== '/'">
+      <router-link to="/incidencias">Incidencias</router-link> |
       <router-link to ="/comunidades">Comunidades</router-link>
     </nav>
 

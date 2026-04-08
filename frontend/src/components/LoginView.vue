@@ -54,12 +54,20 @@
   
   <script setup>
   import { ref } from 'vue'
+  import { useRouter } from 'vue-router';
   const isLogin = ref(true)
   const email = ref('')
   const password = ref('')
+  const router=useRouter()
   
   const handleSubmit = () => {
-    console.log("Enviando...", email.value)
+    if(email.value !== '' && password.value !== ''){
+      console.log("Login exitoso, accediendo...");
+      router.push('/incidencias')
+      }
+      else{
+        alert("Rellene todos los campos");
+    }
   }
   </script>
   <style scoped>

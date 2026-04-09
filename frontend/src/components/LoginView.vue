@@ -63,7 +63,7 @@
   const handleSubmit = () => {
     if(email.value !== '' && password.value !== ''){
       console.log("Login exitoso, accediendo...");
-      router.push('/incidencias')
+      router.push('/dashboard')
       }
       else{
         alert("Rellene todos los campos");

@@ -11,22 +11,27 @@
         </header>
         <main class="main-container">
             <section class="panel">
-                <div class="panel-view">
-                    <div class="circle-bg">📊</div>
-                </div>
                 <h2> No hay actividades</h2>
                 <p> Las incidencias reportadas y las votaciones apareceran aquí</p>
             </section>
         </main>
         <nav class="bottom-nav">
-            <span class="icon">🏠</span>
-            <span> Inicio</span>  
-            <span class="icon">⚠️</span>
-            <span>Incidencias</span>
-            <span class="icon">🗳️</span>
-            <span>Votaciones</span>
-            <span class="icon">👤</span>
-            <span>Perfil</span>
+            <router-link to="/dashboard" class="nav-item">
+                <span class="icon">🏠</span>
+                <span> Inicio</span> 
+            </router-link>
+            <router-link to="/incidencias" class="nav-item">
+                <span class="icon">⚠️</span>
+                <span>Incidencias</span>
+            </router-link>
+            <router-link to="/incidencias" class="nav-item">
+                <span class="icon">🗳️</span>
+                <span>Votaciones</span>
+            </router-link>
+            <router-link to="/incidencias" class="nav-item">
+                <span class="icon">👤</span>
+                <span>Perfil</span>
+            </router-link>
         </nav>
     </div>
 </template>
@@ -80,15 +85,7 @@
         margin-top: 10px;
         background: white;
     }
-    .circle-bg{
-        display:flex;
-        justify-content: column ;
-        align-items: center;
-        height: 60px;
-        width: 60px;
-        font-size: 20px;
-        background: #f2f2f7;
-    }
+
     .panel h2{
         font-size: 14px;
         font-weight: 400px;
@@ -107,6 +104,14 @@
         padding-top: 10px;
         border-top: 2px, solid #e5e5e5;
         background: white;
+    }
+    .nav-item{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 8px;
+        font-weight: 400px;
+        color: #8e8e8e;
     }
     .icon{
         font-size: 20px;

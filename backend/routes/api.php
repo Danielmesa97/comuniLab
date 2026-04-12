@@ -7,3 +7,4 @@ use App\Http\Controllers\IncidenciaController;
 Route::get('/comunidades', [ComunidadController::class, 'index']);
 Route::post('/comunidades', [ComunidadController::class, 'store']);
 Route::get('/incidencias', [IncidenciaController::class, 'index']);
+Route::post('/incidencias', [IncidenciaController::class, 'store']);

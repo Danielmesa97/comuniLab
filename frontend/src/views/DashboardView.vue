@@ -11,22 +11,27 @@
         </header>
         <main class="main-container">
             <section class="panel">
-                <div class="panel-view">
-                    <div class="circle-bg">📊</div>
-                </div>
                 <h2> No hay actividades</h2>
                 <p> Las incidencias reportadas y las votaciones apareceran aquí</p>
             </section>
         </main>
         <nav class="bottom-nav">
-            <span class="icon">🏠</span>
-            <span> Inicio</span>  
-            <span class="icon">⚠️</span>
-            <span>Incidencias</span>
-            <span class="icon">🗳️</span>
-            <span>Votaciones</span>
-            <span class="icon">👤</span>
-            <span>Perfil</span>
+            <router-link to="/dashboard" class="nav-item">
+                <span class="icon">🏠</span>
+                <span> Inicio</span> 
+            </router-link>
+            <router-link to="/incidencias" class="nav-item">
+                <span class="icon">⚠️</span>
+                <span>Incidencias</span>
+            </router-link>
+            <router-link to="/incidencias" class="nav-item">
+                <span class="icon">🗳️</span>
+                <span>Votaciones</span>
+            </router-link>
+            <router-link to="/incidencias" class="nav-item">
+                <span class="icon">👤</span>
+                <span>Perfil</span>
+            </router-link>
         </nav>
     </div>
 </template>
@@ -35,15 +40,17 @@
     .dashboard-container{
         display:flex;
         flex-direction: column;
+        width: 100%;
+        min-height: 100vh;
         background-color: #f2f2f7;
-        overflow:hidden
     }
     .dashboard-header{
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 20px 5%;
+        background: white;
         border-bottom: 2px solid #e5e5e5;
-        padding: 30px 15px 15px;
     }
     .gretting h1{
         font-size: 24px; 
@@ -57,70 +64,81 @@
         #8e8e8e;
     }
     .icon-btn{
+        display: flex;
+        justify-content: center;
+        align-items: center;
         height: 30px;
         width: 30px;
         font-size: 15px;
         background: #f2f2f7;
         border-radius: 50%;
-        position: relative;
         cursor: pointer;
 
     }
     .main-container{
         flex: 1;
         display: flex;
-        flex-direction: column;
-        padding: 15px;
-        overflow-y: auto;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 20px 5%;
+        box-sizing: border-box;
+        
     }
     .panel{
         text-align:center;
-        padding: 30px 15px;
+        padding: 40px 20px;
         border-radius: 20px;
-        margin-top: 10px;
         background: white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        width: 100%;
     }
-    .circle-bg{
-        display:flex;
-        justify-content: column ;
-        align-items: center;
-        height: 60px;
-        width: 60px;
-        font-size: 20px;
-        background: #f2f2f7;
-    }
+
     .panel h2{
-        font-size: 14px;
+        font-size: 18px;
         font-weight: 400px;
         margin-bottom: 10px;
     }
 
     .panel p{
-        font-size:10px;
+        font-size:14px;
         color:#8e8e8e;
-        margin-bottom: 20px;
+        max-width: 400px;
+        margin: 0 auto;
     }
     .bottom-nav{
         display: flex;
         justify-content: space-around;
-        height: 80px;
-        padding-top: 10px;
+        align-items: center;
+        height: 60px;
         border-top: 2px, solid #e5e5e5;
         background: white;
+        width: 100%;
+        position: sticky;
+        bottom: 0;
+    }
+    .nav-item{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: #8e8e8e;
+        flex: 1;
     }
     .icon{
         font-size: 20px;
         margin-bottom: 5px;
     }
 
+    .nav-item span:last-child{
+        font-size: 12px;
+        font-weight: 500px;
+    }
     /* Responsive en escritorio*/
-    @media (min-width: 780px){
-        .dashboard-container{
-            max-width: 450px;
-            margin: o auto;
-            border-left: 1px solid #ddd;
-            border-right: 1px solid #ddd;
-            box-shadow: 0 0 50px;
+    @media (min-width: 1024px){
+        .dashboard-header, .main-container{         
+            padding-left: 10%;
+            padding-right: 10%;
         }
+        
     }
 </style>

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ComunidadController;
 use App\Http\Controllers\IncidenciaController;
+use App\Http\Controllers\AuthController;
 
 Route::get('/comunidades', [ComunidadController::class, 'index']);
 Route::post('/comunidades', [ComunidadController::class, 'store']);

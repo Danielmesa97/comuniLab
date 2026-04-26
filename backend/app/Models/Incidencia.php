@@ -13,8 +13,13 @@ class Incidencia extends Model
     protected $fillable = [
         'titulo',
         'descripcion',
+        'foto',
         'estado',
         'user_id',
         // 'comunidad_id', 
     ];
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

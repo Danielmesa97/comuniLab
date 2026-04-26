@@ -25,12 +25,14 @@
 export default {
   name: "IncidenciaForm",
   emits: ["crear-incidencia"],
+
   data() {
     return {
       titulo: "",
       descripcion: ""
     }
   },
+
   methods: {
     crearIncidencia() {
       if (!this.titulo) {
@@ -38,16 +40,37 @@ export default {
         return
       }
 
-      const payload = {
-        titulo: this.titulo,
-        descripcion: this.descripcion
-      }
+      fetch('http://127.0.0.1:8000/api/incidencias', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          titulo: this.titulo,
+          descripcion: this.descripcion,
+          user_id:1 //para las pruebas que quiero hacer !!!!!!!
+        })
+      })
+      .then(async res => {
+        const data = await res.json()
+        console.log("STATUS:", res.status)
+        console.log("RESPUESTA:", data)
 
-      console.log("EMITIENDO:", payload)
-      this.$emit("crear-incidencia", payload)
+        if (!res.ok) {
+          throw new Error("Error en backend")
+        }
 
-      this.titulo = ""
-      this.descripcion = ""
+        return data
+      })
+      .then(data => {
+        this.$emit("crear-incidencia", data.data)
+
+        this.titulo = ""
+        this.descripcion = ""
+      })
+      .catch(err => {
+        console.error("ERROR:", err)
+      })
     }
   }
 }

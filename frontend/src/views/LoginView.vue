@@ -3,9 +3,7 @@
       <div class="form-card">
         
         <div class="logo-section">
-          <div class="logo-circle">
-            <span>LOGO</span>
-          </div>
+          <img src="@/assets/comunilab.png" alt="ComuniLab" class="logo-image">
         </div>
   
         <div class="tab-container">
@@ -71,134 +69,174 @@
   }
   </script>
   <style scoped>
-  /* Contenedor que ocupa toda la pantalla */
-  .page-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    width: 100%;
-    background-color: #1a1a1a; /* Fondo oscuro para resaltar la tarjeta */
-    padding: 20px;
-  }
-  
-  /* La Tarjeta (Form Card) */
-  .form-card {
-    background-color: #ffffff;
-    width: 100%;
-    max-width: 400px; /* Tamaño máximo en PC */
-    min-height: 550px;
-    border-radius: 40px;
-    padding: 40px 30px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-  }
-  
-  /* Logo */
-  .logo-section {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 30px;
-  }
-  .logo-circle {
-    width: 80px;
-    height: 80px;
-    background-color: #f0f0f5;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #888;
-    font-weight: bold;
-  }
-  
-  /* Tabs Estilizadas */
-  .tab-container {
-    display: flex;
-    background-color: #f2f2f7;
-    border-radius: 15px;
-    padding: 5px;
-    margin-bottom: 30px;
-  }
-  .tab-btn {
-    flex: 1;
-    border: none;
-    padding: 12px;
-    border-radius: 12px;
-    cursor: pointer;
-    background: transparent;
-    color: #8e8e93;
-    transition: all 0.3s ease;
-    font-size: 14px;
-  }
-  .tab-btn.active {
-    background-color: #ffffff;
-    color: #000;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  }
-  
-  /* Inputs */
-  .input-group {
-    margin-bottom: 20px;
-  }
-  .input-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  .input-group input {
-    width: 100%;
-    padding: 15px;
-    border-radius: 12px;
-    border: 1px solid #e5e5ea;
-    background-color: #f9f9fb;
-    font-size: 16px;
-  }
-  
-  /* Links */
-  .extra-links {
-    text-align: right;
-    margin-bottom: 30px;
-  }
-  .extra-links a {
-    font-size: 13px;
-    color: #666;
-    text-decoration: none;
-  }
-  
-  /* Botón Principal al final */
-  .action-area {
-    margin-top: auto;
-  }
-  .main-btn {
-    width: 100%;
-    padding: 18px;
-    background-color: #080a13;
-    color: white;
-    border: none;
-    border-radius: 15px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.1s;
-  }
-  .main-btn:active {
-    transform: scale(0.98);
-  }
-  
-  /* --- MEDIA QUERIES PARA MÓVIL --- */
-  @media (max-width: 480px) {
-    .page-container {
-      padding: 0; /* Quitamos espacio exterior en móvil */
-      background-color: #ffffff; /* Opcional: fondo blanco en móvil para que parezca app nativa */
-    }
-    .form-card {
-      max-width: 100%;
-      height: 100vh; /* Ocupa todo el alto en móvil */
-      border-radius: 0; /* Quitamos bordes redondeados si es pantalla completa */
-      box-shadow: none;
-    }
-  }
-  </style>
+
+*{
+box-sizing:border-box;
+}
+
+.page-container{
+display:flex;
+justify-content:center;
+align-items:center;
+width:100%;
+min-height:100vh;
+margin:0 auto;
+padding:40px;
+background:#f2f2f7;
+}
+
+
+/* ---------- DESKTOP ---------- */
+.form-card{
+background:white;
+width:100%;
+max-width:800px;   /* antes 540 */
+padding:70px 100px;
+border-radius:30px;
+box-shadow:0 15px 35px rgba(0,0,0,.15);
+}
+
+/* centra mejor el formulario dentro de la tarjeta */
+.auth-form{
+max-width:700px;
+margin:auto;
+}
+
+
+/* logo */
+.logo-section{
+display:flex;
+justify-content:center;
+align-items:center;
+width:100%;
+margin-bottom:30px;
+}
+
+.logo-image{
+width:200px;
+max-width:100%;
+height:auto;
+display:block;
+}
+
+
+
+/* tabs */
+.tab-container{
+display:flex;
+background:#f2f2f7;
+border-radius:14px;
+padding:5px;
+margin-bottom:30px;
+}
+
+.tab-btn{
+flex:1;
+border:none;
+background:transparent;
+padding:14px;
+border-radius:12px;
+cursor:pointer;
+}
+
+.tab-btn.active{
+background:white;
+box-shadow:0 4px 10px rgba(0,0,0,.08);
+}
+
+
+/* inputs */
+.input-group{
+margin-bottom:20px;
+}
+
+.input-group label{
+display:block;
+margin-bottom:8px;
+font-weight:600;
+}
+
+.input-group input{
+width:100%;
+padding:18px;
+border-radius:12px;
+border:1px solid #ddd;
+background:#fafafa;
+font-size:18px;
+}
+
+
+/* links */
+.extra-links{
+text-align:right;
+margin-bottom:30px;
+}
+
+.action-area{
+margin-top:auto;
+}
+
+
+/* botón */
+.main-btn{
+width:100%;
+padding:20px;
+background:#080a13;
+color:white;
+border:none;
+border-radius:14px;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+}
+
+
+
+/* ---------- PANTALLAS MUY GRANDES ---------- */
+@media (min-width:1200px){
+
+.form-card{
+width:min(90vw,700px);
+padding:50px 60px;
+margin:auto;
+}
+
+}
+
+
+
+/* ---------- TABLET ---------- */
+@media (max-width:768px){
+
+.form-card{
+max-width:500px;
+padding:40px;
+}
+
+.auth-form{
+max-width:100%;
+}
+
+}
+
+
+
+/* ---------- MÓVIL ---------- */
+@media (max-width:480px){
+
+.page-container{
+padding:0;
+background:white;
+}
+
+.form-card{
+max-width:100%;
+min-height:100vh;
+padding:35px 25px;
+border-radius:0;
+box-shadow:none;
+}
+
+}
+
+</style>

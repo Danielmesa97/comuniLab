@@ -12,4 +12,5 @@ Route::get('/incidencias', [IncidenciaController::class, 'index']);
 Route::post('/incidencias', [IncidenciaController::class, 'store']);
 Route::post('/registro', [AuthController::class, 'registro']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/votaciones', [VotacionController::class, 'index']);
+Route::middleware('auth:sanctum')->get('/votaciones', [VotacionController::class, 'index']);
+Route::middleware('auth:sanctum')->post('/votaciones/votar', [VotacionController::class, 'votar']);

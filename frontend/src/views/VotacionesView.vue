@@ -16,7 +16,15 @@
                             <p>{{ v.descripcion }}</p>
                             <span class="status-badge" :class="v.estado">{{ v.estado }}</span>
                         </div>
-                        <button class="vote-action-btn" @click="abrirModal(v)">Votar ahora</button>
+                        
+                        <button 
+                            class="vote-action-btn" 
+                            :class="{ 'voted-btn': isVoted(v.id) }"
+                            :disabled="isVoted(v.id)"
+                            @click="abrirModal(v)"
+                        >
+                            {{ isVoted(v.id) ? 'Ya has votado' : 'Votar ahora' }}
+                        </button>
                     </div>
                 </div>
 
@@ -62,99 +70,115 @@
 import { ref, onMounted } from 'vue';
 
 const votaciones = ref([]);
-const mostrarModal = ref(false); // Controla si el pop-up se ve
-const votacionSeleccionada = ref(null); // Guarda la votación que el usuario clicó
+const mostrarModal = ref(false); 
+const votacionSeleccionada = ref(null);
+
+// 1. VARIABLE PARA GUARDAR LOS IDs VOTADOS
+const votacionesVotadas = ref([]);
+
+// Función para saber si ya se votó una encuesta específica
+const isVoted = (id) => {
+    return votacionesVotadas.value.includes(id);
+};
 
 const getVotaciones = async () => {
     try {
-        const response = await fetch('http://127.0.0.1:8000/api/votaciones');
+        const token = localStorage.getItem('auth_token');
+        
+        const response = await fetch('http://127.0.0.1:8000/api/votaciones', {
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}` // Enviamos el token para que Laravel sepa quiénes somos
+            }
+        });
+        
         const data = await response.json();
-        votaciones.value = data;
+        
+        // Ahora data tiene dos partes:
+        votaciones.value = data.votaciones;       // Las tarjetas
+        votacionesVotadas.value = data.mis_votos; // Los IDs que ya votamos antes
+        
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error cargando votaciones:", error);
     }
 };
 
-// Función para preparar el modal
 const abrirModal = (votacion) => {
     votacionSeleccionada.value = votacion;
     mostrarModal.value = true;
 };
 
-// Función para procesar el voto (por ahora solo alerta, luego lo conectamos a la API)
-const enviarVoto = (opcion) => {
-    alert(`Has votado "${opcion.toUpperCase()}" en: ${votacionSeleccionada.value.titulo}`);
-    
-    // Aquí es donde haríamos el fetch al backend para guardar el voto
-    
-    mostrarModal.value = false; // Cerramos el modal
+const enviarVoto = async (opcion) => {
+    try {
+        const token = localStorage.getItem('auth_token'); 
+
+        const response = await fetch('http://127.0.0.1:8000/api/votaciones/votar', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                votacion_id: votacionSeleccionada.value.id,
+                opcion: opcion
+            })
+        });
+
+        if (response.ok) {
+            // 2. AÑADIMOS EL ID A LA LISTA DE VOTADOS
+            votacionesVotadas.value.push(votacionSeleccionada.value.id);
+            
+            // 3. CERRAMOS EL MODAL
+            mostrarModal.value = false;
+            
+            alert("¡Voto registrado correctamente!");
+        } else {
+            const errorData = await response.json();
+            alert("Error: " + (errorData.message || "No se pudo procesar el voto"));
+        }
+    } catch (error) {
+        console.error("Error al enviar el voto:", error);
+    }
 };
 
 onMounted(getVotaciones);
 </script>
 
 <style scoped>
-    /* ... (Tus estilos anteriores se mantienen) ... */
-
+    /* ... (Tus estilos base) ... */
     .dashboard-container { display:flex; flex-direction: column; width: 100%; min-height: 100vh; background-color: #f2f2f7; }
     .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: white; border-bottom: 2px solid #e5e5e5; }
     .main-container { flex: 1; padding: 20px 5%; }
     .votacion-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 15px; }
-    .vote-action-btn { background: #007aff; color: white; border: none; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer; }
     
+    /* BOTÓN NORMAL */
+    .vote-action-btn { 
+        background: #007aff; 
+        color: white; 
+        border: none; 
+        padding: 10px; 
+        border-radius: 10px; 
+        font-weight: 600; 
+        cursor: pointer; 
+        transition: background 0.3s;
+    }
+
+    /* ESTILO PARA BOTÓN GRIS (CUANDO YA SE VOTÓ) */
+    .voted-btn, .vote-action-btn:disabled {
+        background-color: #c7c7cc !important; /* Gris iOS */
+        color: #8e8e93 !important;
+        cursor: not-allowed;
+    }
+
     /* ESTILOS DEL MODAL */
-    .modal-overlay {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.5); /* Oscurece el fondo */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        backdrop-filter: blur(3px); /* Efecto cristal de iOS */
-    }
-
-    .modal-content {
-        background: white;
-        padding: 30px;
-        border-radius: 20px;
-        width: 80%;
-        max-width: 400px;
-        text-align: center;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    }
-
-    .modal-actions {
-        display: flex;
-        gap: 10px;
-        margin: 20px 0;
-    }
-
-    .btn-si, .btn-no {
-        flex: 1;
-        padding: 15px;
-        border: none;
-        border-radius: 12px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: transform 0.1s;
-    }
-
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(3px); }
+    .modal-content { background: white; padding: 30px; border-radius: 20px; width: 80%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-actions { display: flex; gap: 10px; margin: 20px 0; }
+    .btn-si, .btn-no { flex: 1; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
     .btn-si { background: #e1ffdc; color: #28a745; }
     .btn-no { background: #ffdce0; color: #d73a49; }
-    
-    .btn-si:active, .btn-no:active { transform: scale(0.95); }
-
-    .btn-cancelar {
-        background: none;
-        border: none;
-        color: #8e8e93;
-        font-size: 14px;
-        cursor: pointer;
-        margin-top: 10px;
-    }
+    .btn-cancelar { background: none; border: none; color: #8e8e93; font-size: 14px; cursor: pointer; margin-top: 10px; }
 
     /* NAV INFERIOR */
     .bottom-nav { display: flex; justify-content: space-around; align-items: center; height: 60px; border-top: 1px solid #e5e5e5; background: white; width: 100%; position: sticky; bottom: 0; }

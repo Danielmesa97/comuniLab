@@ -1,75 +1,122 @@
 <template>
-    <div class="page-container">
-      <div class="form-card">
-        
-        <div class="logo-section">
-          <img src="@/assets/comunilab.png" alt="ComuniLab" class="logo-image">
-        </div>
-  
-        <div class="tab-container">
-          <button 
-            type="button" 
-            @click="isLogin = true" 
-            class="tab-btn" 
-            :class="{ 'active': isLogin }"
-          >
-            Iniciar Sesión
-          </button>
-          <button 
-            type="button" 
-            @click="isLogin = false" 
-            class="tab-btn" 
-            :class="{ 'active': !isLogin }"
-          >
-            Registrarse
-          </button>
-        </div>
-  
-        <form @submit.prevent="handleSubmit" class="auth-form">
-          <div class="input-group">
-            <label>Email</label>
-            <input type="email" v-model="email" placeholder="correo@ejemplo.com" required>
-          </div>
-  
-          <div class="input-group">
-            <label>Contraseña</label>
-            <input type="password" v-model="password" placeholder="Ingresa tu contraseña" required>
-          </div>
-  
-          <div class="extra-links">
-            <a href="#">¿Olvidaste tu contraseña?</a>
-          </div>
-  
-          <div class="action-area">
-            <button type="submit" class="main-btn">
-              {{ isLogin ? 'Acceder' : 'Crear cuenta' }}
-            </button>
-          </div>
-        </form>
+  <div class="page-container">
+    <div class="form-card">
+      
+      <div class="logo-section">
+        <img src="@/assets/comunilab.png" alt="ComuniLab" class="logo-image">
       </div>
-    </div>
-  </template>
-  
-  <script setup>
-  import { ref } from 'vue'
-  import { useRouter } from 'vue-router';
-  const isLogin = ref(true)
-  const email = ref('')
-  const password = ref('')
-  const router=useRouter()
-  
-  const handleSubmit = () => {
-    if(email.value !== '' && password.value !== ''){
-      console.log("Login exitoso, accediendo...");
-      router.push('/dashboard')
-      }
-      else{
-        alert("Rellene todos los campos");
-    }
-  }
-  </script>
-  <style scoped>
 
+      <div class="tab-container">
+        <button 
+          type="button" 
+          @click="isLogin = true" 
+          class="tab-btn" 
+          :class="{ 'active': isLogin }"
+        >
+          Iniciar Sesión
+        </button>
+        <button 
+          type="button" 
+          @click="isLogin = false" 
+          class="tab-btn" 
+          :class="{ 'active': !isLogin }"
+        >
+          Registrarse
+        </button>
+      </div>
+
+      <form @submit.prevent="handleSubmit" class="auth-form">
+        
+        <div class="input-group" v-if="!isLogin">
+          <label>Nombre</label>
+          <input type="text" v-model="name" placeholder="Tu nombre completo" required>
+        </div>
+
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" v-model="email" placeholder="correo@ejemplo.com" required>
+        </div>
+
+        <div class="input-group">
+          <label>Contraseña</label>
+          <input type="password" v-model="password" placeholder="Ingresa tu contraseña" required>
+        </div>
+
+        <div class="extra-links">
+          <a href="#">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <div class="action-area">
+          <button type="submit" class="main-btn">
+            {{ isLogin ? 'Acceder' : 'Crear cuenta' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router';
+
+const isLogin = ref(true)
+const name = ref('') // Añadido para guardar el nombre en el registro
+const email = ref('')
+const password = ref('')
+const router = useRouter()
+
+const handleSubmit = async () => {
+  // Elegimos la ruta según la pestaña en la que estemos
+  const url = isLogin.value
+    ? 'http://127.0.0.1:8000/api/login'
+    : 'http://127.0.0.1:8000/api/registro'
+
+  // Preparamos el paquete de datos
+  const payload = {
+    email: email.value,
+    password: password.value
+  }
+
+  // Si estamos registrando, añadimos el nombre al paquete
+  if (!isLogin.value) {
+    payload.name = name.value
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+
+    const data = await response.json()
+
+    // Si Laravel devuelve un error (ej: correo repetido, contraseña corta)
+    if (!response.ok) {
+      alert(data.message || "Error en la autenticación")
+      return
+    }
+
+    // Si todo va bien, guardamos el Token VIP
+    if (data.token) {
+      localStorage.setItem('auth_token', data.token)
+    }
+
+    // Y teletransportamos al usuario al Dashboard
+    router.push('/dashboard')
+
+  } catch (error) {
+    alert("Error de conexión. ¿Está el servidor de Laravel encendido?")
+    console.error(error)
+  }
+}
+</script>
+
+<style scoped>
 *{
 box-sizing:border-box;
 }

@@ -24,7 +24,7 @@
                 <span class="icon">⚠️</span>
                 <span>Incidencias</span>
             </router-link>
-            <router-link to="/incidencias" class="nav-item">
+            <router-link to="/votaciones" class="nav-item">
                 <span class="icon">🗳️</span>
                 <span>Votaciones</span>
             </router-link>

@@ -14,3 +14,44 @@ display:block;
 background:#f2f2f7;
 font-family:Arial, sans-serif;
 }
+/* BOTÓN CIRCULAR GLOBAL (Para añadir votaciones, viviendas, incidencias, etc.) */
+.btn-add-circular {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: #007aff; /* Azul iOS */
+    color: white;
+    border: none;
+    font-size: 28px;
+    font-weight: 300;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    /* El transition hace que el ensombrecimiento sea suave */
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* EFECTO AL PASAR EL CURSOR (Hover) */
+.btn-add-circular:hover {
+    /* Oscurece el botón un 10% */
+    filter: brightness(90%);
+    /* Aumenta un poco la sombra para dar sensación de relieve */
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+}
+
+/* EFECTO AL PULSAR (Active) */
+.btn-add-circular:active {
+    transform: scale(0.9);
+    /* Lo oscurece un poco más al hacer clic */
+    filter: brightness(80%);
+    box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
+}
+
+/* Ajuste del símbolo + */
+.btn-add-circular span {
+    line-height: 0;
+    margin-bottom: 4px;
+}

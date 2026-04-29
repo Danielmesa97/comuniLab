@@ -5,6 +5,10 @@
                 <h1>Votaciones</h1>
                 <p>Decide el futuro de tu comunidad</p>
             </div>
+
+            <button class="btn-add-circular" @click="console.log('Crear nueva votación')">
+                <span>+</span>
+            </button>
         </header>
 
         <main class="main-container">

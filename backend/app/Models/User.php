@@ -47,4 +47,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function votos()
+{
+    return $this->hasMany(Voto::class);
+}
 }

@@ -10,6 +10,16 @@
                 <span>+</span>
             </button>
         </header>
+        
+        <div class="search-container">
+            <input 
+                type="text" 
+                v-model="textoBusqueda" 
+                @input="getVotaciones" 
+                placeholder="Buscar votaciones antiguas o por título..."
+                class="search-input"
+            >
+        </div>
 
         <main class="main-container">
             <section class="votaciones-wrapper">
@@ -28,14 +38,36 @@
                             </div>
                         </div>
                         
-                        <button 
-                            class="vote-action-btn" 
-                            :class="{ 'voted-btn': isVoted(v.id) }"
-                            :disabled="isVoted(v.id)"
-                            @click="abrirModal(v)"
-                        >
-                            {{ isVoted(v.id) ? 'Ya has votado' : 'Votar ahora' }}
-                        </button>
+                        <div class="acciones-votacion" style="margin-top: 15px;">
+    
+                            <!-- CASO 1: El usuario ya ha votado -->
+                            <button 
+                                v-if="isVoted(v.id)" 
+                                class="vote-action-btn voted-btn" 
+                                disabled
+                            >
+                                ✅ Ya has votado
+                            </button>
+
+                            <!-- CASO 2: No ha votado y la votación sigue ACTIVA -->
+                            <button 
+                                v-else-if="estaActiva(v.fecha_limite)" 
+                                class="vote-action-btn" 
+                                @click="abrirModal(v)"
+                            >
+                                Votar ahora
+                            </button>
+
+                            <!-- CASO 3: No ha votado, pero la votación YA CADUCÓ -->
+                            <button 
+                                v-else 
+                                class="vote-action-btn voted-btn" 
+                                disabled
+                            >
+                                ⏳ Votación finalizada
+                            </button>
+
+                        </div>
                     </div>
                 </div>
 
@@ -125,6 +157,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 
+const textoBusqueda = ref('');
 const votaciones = ref([]);
 const mostrarModal = ref(false); 
 const votacionSeleccionada = ref(null);
@@ -137,11 +170,15 @@ const isVoted = (id) => {
     return votacionesVotadas.value.includes(id);
 };
 
+
 const getVotaciones = async () => {
     try {
         const token = localStorage.getItem('auth_token');
         
-        const response = await fetch('http://127.0.0.1:8000/api/votaciones', {
+        // Magia aquí: Añadimos el parámetro de búsqueda a tu URL
+        const url = `http://127.0.0.1:8000/api/votaciones?buscar=${textoBusqueda.value}`;
+        
+        const response = await fetch(url, {
             headers: {
                 'Accept': 'application/json',
                 'Authorization': `Bearer ${token}` // Enviamos el token para que Laravel sepa quiénes somos
@@ -150,7 +187,7 @@ const getVotaciones = async () => {
         
         const data = await response.json();
         
-        // Ahora data tiene dos partes:
+        // Mantenemos tu lógica intacta porque está perfecta:
         votaciones.value = data.votaciones;       // Las tarjetas
         votacionesVotadas.value = data.mis_votos; // Los IDs que ya votamos antes
         
@@ -198,7 +235,7 @@ const enviarVoto = async (opcion) => {
     }
 };
 
-// --- NUEVAS VARIABLES PARA CREAR VOTACIÓN ---
+// CREAR VOTACIÓN ---
 const mostrarModalCrear = ref(false);
 const nuevaVotacion = ref({
     titulo: '',
@@ -253,6 +290,17 @@ const guardarNuevaVotacion = async () => {
     }
 };
 
+// Función para saber si una votación sigue activa hoy
+const estaActiva = (fechaLimite) => {
+    // Si la fecha límite es null (no caduca nunca), siempre está activa
+    if (!fechaLimite) return true; 
+
+    const fechaFin = new Date(fechaLimite);
+    const hoy = new Date();
+    
+    return hoy <= fechaFin; 
+};
+
 onMounted(getVotaciones);
 </script>
 
@@ -291,10 +339,7 @@ onMounted(getVotaciones);
     .btn-no { background: #ffdce0; color: #d73a49; }
     .btn-cancelar { background: none; border: none; color: #8e8e93; font-size: 14px; cursor: pointer; margin-top: 10px; }
 
-    /* NAV INFERIOR */
-    .bottom-nav { display: flex; justify-content: space-around; align-items: center; height: 60px; border-top: 1px solid #e5e5e5; background: white; width: 100%; position: sticky; bottom: 0; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #8e8e8e; flex: 1; font-size: 12px; }
-    .nav-item.active { color: #007aff; }
+   
 
         /* ESTILOS DEL FORMULARIO DE CREACIÓN */
     .crear-modal {
@@ -340,5 +385,29 @@ onMounted(getVotaciones);
         outline: none;
         border-color: #007aff;
         box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+    }
+
+    
+    .search-container {
+    padding: 0 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 20px;
+        border: 1px solid #e5e5ea;
+        background-color: #f2f2f7;
+        font-size: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        background-color: #ffffff;
+        border-color: #007aff;
+        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
     }
 </style>

@@ -58,7 +58,7 @@
         <span>Incidencias</span>
       </router-link>
 
-      <router-link to="/incidencias" class="nav-item">
+      <router-link to="/votaciones" class="nav-item">
         <span class="icon">🗳️</span>
         <span>Votaciones</span>
       </router-link>
@@ -173,33 +173,5 @@ export default {
   text-align: left;
 }
 
-.bottom-nav{
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  height: 60px;
-  border-top: 2px solid #e5e5e5;
-  background: white;
-  width: 100%;
-  position: sticky;
-  bottom: 0;
-}
 
-.nav-item{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-decoration: none;
-  color: #8e8e8e;
-  flex: 1;
-}
-
-.icon{
-  font-size: 20px;
-  margin-bottom: 5px;
-}
-
-.nav-item span:last-child{
-  font-size: 12px;
-}
 </style>

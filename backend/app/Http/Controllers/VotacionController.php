@@ -33,7 +33,12 @@ class VotacionController extends Controller
 
     public function index(Request $request)
     {
-        $query = Votacion::query();
+        // Pedimos a Laravel que cuente los votos totales y solo los "si"
+        $query = Votacion::query()
+            ->withCount('votos') 
+            ->withCount(['votos as votos_si_count' => function ($q) {
+                $q->where('opcion', 'si'); 
+            }]);
 
         // 1. Usamos 'filled' que es la forma nativa y segura de Laravel
         if ($request->filled('buscar')) {
@@ -71,21 +76,20 @@ class VotacionController extends Controller
     
     public function votar(Request $request)
     {
-        // 1. Validamos los datos de entrada
+        // 1. Validamos los datos de entrada (Añadida la opción)
         $request->validate([
             'votacion_id' => 'required|exists:votaciones,id',
-            // ... (otras validaciones que tengas como la opción elegida)
+            'opcion'      => 'required|in:si,no' // Aseguramos que el voto sea estrictamente "si" o "no"
         ]);
 
         // 2. Buscamos la votación en la base de datos
         $votacion = Votacion::findOrFail($request->votacion_id);
 
-        // 👇 3. LA NUEVA BARRERA DE SEGURIDAD 👇
-        // Si la votación tiene fecha límite, y la fecha actual es mayor que esa límite...
+        // 3. LA NUEVA BARRERA DE SEGURIDAD
         if ($votacion->fecha_limite && now()->greaterThan($votacion->fecha_limite)) {
             return response()->json([
                 'message' => 'Lo sentimos, el plazo para esta votación ha finalizado.'
-            ], 403); // 403 significa "Prohibido"
+            ], 403); 
         }
 
         // 4. Comprobamos si el usuario ya había votado antes
@@ -94,6 +98,16 @@ class VotacionController extends Controller
             return response()->json(['message' => 'Ya has votado en esta propuesta.'], 403);
         }
 
-        // ... (Aquí sigue tu código normal para guardar el voto) ...
+        
+        $voto = $request->user()->votos()->create([
+            'votacion_id' => $votacion->id,
+            'opcion'      => $request->opcion
+        ]);
+
+        // 6. Devolvemos una respuesta de éxito a Vue
+        return response()->json([
+            'message' => '¡Voto registrado correctamente!',
+            'voto'    => $voto
+        ], 201); // El código 201 significa "Creado exitosamente"
     }
 }

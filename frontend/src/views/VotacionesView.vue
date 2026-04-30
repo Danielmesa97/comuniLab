@@ -25,6 +25,11 @@
             <section class="votaciones-wrapper">
                 <div v-if="votaciones.length > 0" class="list-container">
                     <div v-for="v in votaciones" :key="v.id" class="votacion-card">
+                                              
+                        <span class="percentage-badge">
+                            👍 {{ calcularPorcentajeSi(v) }}% Sí
+                        </span>
+
                         <div class="card-info">
                             <h3>{{ v.titulo }}</h3>
                             <p>{{ v.descripcion }}</p>
@@ -39,7 +44,7 @@
                         </div>
                         
                         <div class="acciones-votacion" style="margin-top: 15px;">
-    
+
                             <!-- CASO 1: El usuario ya ha votado -->
                             <button 
                                 v-if="isVoted(v.id)" 
@@ -243,6 +248,17 @@ const nuevaVotacion = ref({
     fecha_limite: ''
 });
 
+// Calcular el porcentaje de Sí
+const calcularPorcentajeSi = (votacion) => {
+    // Si nadie ha votado aún, devolvemos 0 para evitar dividir por cero
+    if (!votacion.votos_count || votacion.votos_count === 0) {
+        return 0;
+    }
+    
+    const porcentaje = (votacion.votos_si_count / votacion.votos_count) * 100;
+    return Math.round(porcentaje);
+};
+
 // Función para abrir el panel y limpiar el formulario
 const abrirModalCrear = () => {
     nuevaVotacion.value = { titulo: '', descripcion: '', fecha_limite: '' };
@@ -309,7 +325,7 @@ onMounted(getVotaciones);
     .dashboard-container { display:flex; flex-direction: column; width: 100%; min-height: 100vh; background-color: #f2f2f7; }
     .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: white; border-bottom: 2px solid #e5e5e5; }
     .main-container { flex: 1; padding: 20px 5%; }
-    .votacion-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 15px; }
+    .votacion-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 15px; position: relative;}
     
     /* BOTÓN NORMAL */
     .vote-action-btn { 
@@ -410,4 +426,17 @@ onMounted(getVotaciones);
         border-color: #007aff;
         box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
     }
+    
+    .percentage-badge {
+    position: absolute;
+    top: 15px;      /* Distancia desde arriba */
+    right: 15px;    /* Distancia desde la derecha */
+    background-color: #e0f7fa; 
+    color: #00796b; 
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Sombra suave para darle volumen */
+}
 </style>

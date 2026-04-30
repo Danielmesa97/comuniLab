@@ -13,4 +13,11 @@ class Votacion extends Model
     protected $table = 'votaciones'; 
 
     protected $fillable = ['titulo', 'descripcion', 'estado', 'fecha_limite'];
+
+    //contar votos
+    public function votos()
+    {
+        // Una votación "tiene muchos" votos
+        return $this->hasMany(Voto::class);
+    }
 }

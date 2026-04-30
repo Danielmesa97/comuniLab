@@ -28,22 +28,28 @@ class VotacionController extends Controller
 
     
     public function votar(Request $request)
-{
-    $request->validate([
-        'votacion_id' => 'required|exists:votaciones,id',
-        'opcion' => 'required|in:si,no',
-    ]);
-
-    try {
-        Voto::create([
-            'user_id' => $request->user()->id,
-            'votacion_id' => $request->votacion_id,
-            'opcion' => $request->opcion,
+    {
+        $request->validate([
+            'votacion_id' => 'required|exists:votaciones,id',
+            'opcion' => 'required|in:si,no',
         ]);
-        return response()->json(['message' => 'Voto registrado con éxito'], 201);
-    } catch (\Exception $e) {
-        // CAMBIA ESTA LÍNEA para ver el error real en el alert de Vue
-        return response()->json(['message' => $e->getMessage()], 500);
+
+        // 1. Buscamos la votación
+        $votacion = Votacion::findOrFail($request->votacion_id);
+
+        // 2. Comprobamos la fecha límite
+        // Usamos now() de Laravel que ya viene con la zona horaria configurada
+        if ($votacion->fecha_limite && now()->gt($votacion->fecha_limite)) {
+            return response()->json([
+                'message' => 'Lo sentimos, el plazo para votar en esta encuesta ha finalizado.'
+            ], 403); // 403 Forbidden: Entiendo quién eres, pero no tienes permiso para esto
+        }
+
+        // 3. Lógica que ya tenías para evitar duplicados y crear el voto...
+        try {
+            // ... (Tu código de creación de voto)
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Ya has votado en esta encuesta'], 422);
+        }
     }
-}
 }

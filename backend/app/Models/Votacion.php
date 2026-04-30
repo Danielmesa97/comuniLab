@@ -12,5 +12,5 @@ class Votacion extends Model
     
     protected $table = 'votaciones'; 
 
-    protected $fillable = ['titulo', 'descripcion', 'estado'];
+    protected $fillable = ['titulo', 'descripcion', 'estado', 'fecha_limite'];
 }

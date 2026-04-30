@@ -6,7 +6,7 @@
                 <p>Decide el futuro de tu comunidad</p>
             </div>
 
-            <button class="btn-add-circular" @click="console.log('Crear nueva votación')">
+            <button class="btn-add-circular" @click="abrirModalCrear">
                 <span>+</span>
             </button>
         </header>
@@ -18,7 +18,14 @@
                         <div class="card-info">
                             <h3>{{ v.titulo }}</h3>
                             <p>{{ v.descripcion }}</p>
-                            <span class="status-badge" :class="v.estado">{{ v.estado }}</span>
+                            
+                            <div class="badges-container">
+                                <span class="status-badge" :class="v.estado">{{ v.estado }}</span>
+                                <!-- NUEVO: Etiqueta de fecha límite -->
+                                <span v-if="v.fecha_limite" class="date-badge">
+                                    ⏳ Finaliza: {{ v.fecha_limite }}
+                                </span>
+                            </div>
                         </div>
                         
                         <button 
@@ -50,6 +57,51 @@
                 </div>
                 
                 <button class="btn-cancelar" @click="mostrarModal = false">Cancelar</button>
+            </div>
+        </div>
+        <!-- MODAL PARA CREAR NUEVA VOTACIÓN -->
+        <div v-if="mostrarModalCrear" class="modal-overlay">
+            <div class="modal-content crear-modal">
+                <h3>Crear Nueva Votación</h3>
+                <p>Añade una propuesta para la comunidad</p>
+                
+                <form @submit.prevent="guardarNuevaVotacion" class="form-crear">
+                    <div class="form-group">
+                        <label for="titulo">Título</label>
+                        <input 
+                            type="text" 
+                            id="titulo" 
+                            v-model="nuevaVotacion.titulo" 
+                            required 
+                            placeholder="Ej: Pintar fachada"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcion">Descripción</label>
+                        <textarea 
+                            id="descripcion" 
+                            v-model="nuevaVotacion.descripcion" 
+                            required 
+                            placeholder="Explica los detalles de la propuesta..."
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fecha_limite">Fecha Límite (Opcional)</label>
+                        <!-- Usamos datetime-local para que el usuario elija día y hora -->
+                        <input 
+                            type="datetime-local" 
+                            id="fecha_limite" 
+                            v-model="nuevaVotacion.fecha_limite"
+                        >
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-si">Crear Votación</button>
+                        <button type="button" class="btn-no" @click="mostrarModalCrear = false">Cancelar</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -146,6 +198,61 @@ const enviarVoto = async (opcion) => {
     }
 };
 
+// --- NUEVAS VARIABLES PARA CREAR VOTACIÓN ---
+const mostrarModalCrear = ref(false);
+const nuevaVotacion = ref({
+    titulo: '',
+    descripcion: '',
+    fecha_limite: ''
+});
+
+// Función para abrir el panel y limpiar el formulario
+const abrirModalCrear = () => {
+    nuevaVotacion.value = { titulo: '', descripcion: '', fecha_limite: '' };
+    mostrarModalCrear.value = true;
+};
+
+const guardarNuevaVotacion = async () => {
+    try {
+        const token = localStorage.getItem('auth_token');
+        
+        // Hacemos la petición POST a tu API de Laravel
+        const response = await fetch('http://127.0.0.1:8000/api/votaciones', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            // Convertimos nuestro objeto reactivo a formato JSON
+            body: JSON.stringify(nuevaVotacion.value)
+        });
+
+        if (response.ok) {
+            // El backend nos devuelve la votación recién creada
+            const nuevaVotacionCreada = await response.json();
+            
+            // 1. Añadimos la nueva votación a nuestra lista para que aparezca en pantalla sin recargar
+            votaciones.value.push(nuevaVotacionCreada.votacion || nuevaVotacionCreada); 
+            
+            // 2. Cerramos el panel
+            mostrarModalCrear.value = false;
+            
+            // 3. Reseteamos los campos del formulario para la próxima vez
+            nuevaVotacion.value = { titulo: '', descripcion: '', fecha_limite: '' };
+            
+        } else {
+            // Si Laravel devuelve un error de validación (ej. falta el título)
+            const errorData = await response.json();
+            alert("Error: " + (errorData.message || "No se pudo crear la votación"));
+            console.error("Errores de validación:", errorData.errors);
+        }
+    } catch (error) {
+        console.error("Error de conexión:", error);
+        alert("Fallo al conectar con el servidor.");
+    }
+};
+
 onMounted(getVotaciones);
 </script>
 
@@ -188,4 +295,50 @@ onMounted(getVotaciones);
     .bottom-nav { display: flex; justify-content: space-around; align-items: center; height: 60px; border-top: 1px solid #e5e5e5; background: white; width: 100%; position: sticky; bottom: 0; }
     .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #8e8e8e; flex: 1; font-size: 12px; }
     .nav-item.active { color: #007aff; }
+
+        /* ESTILOS DEL FORMULARIO DE CREACIÓN */
+    .crear-modal {
+        max-width: 500px;
+    }
+
+    .form-crear {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+        text-align: left; 
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .form-group label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-group input, 
+    .form-group textarea {
+        padding: 12px;
+        border: 1px solid #d1d1d6;
+        border-radius: 8px;
+        font-size: 15px;
+        font-family: inherit; 
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .form-group input:focus, 
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #007aff;
+        box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+    }
 </style>

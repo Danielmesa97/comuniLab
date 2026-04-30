@@ -24,7 +24,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Listar votaciones
     Route::get('/votaciones', [VotacionController::class, 'index']);
     
-    // 👇 ESTA ES LA RUTA QUE SOLUCIONA TU ERROR 405 👇
     // Crear nueva votación
     Route::post('/votaciones', [VotacionController::class, 'store']);
     

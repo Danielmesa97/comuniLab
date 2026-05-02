@@ -194,11 +194,14 @@ const getVotaciones = async () => {
             }
         });
         
-        const data = await response.json();
-        
-        // Mantenemos tu lógica intacta porque está perfecta:
-        votaciones.value = data.votaciones;       // Las tarjetas
-        votacionesVotadas.value = data.mis_votos; // Los IDs que ya votamos antes
+        const data = await response.json()
+
+        if (!response.ok) {
+            console.error(data)
+            return
+        }
+        votaciones.value = data.votaciones || []
+        votacionesVotadas.value = data.mis_votos || []
         
     } catch (error) {
         console.error("Error cargando votaciones:", error);

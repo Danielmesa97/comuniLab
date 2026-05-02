@@ -9,6 +9,7 @@ class Voto extends Model
     protected $fillable = [
         'votacion_id',
         'vivienda_id',
+        'user_id',
         'opcion'
     ];
 

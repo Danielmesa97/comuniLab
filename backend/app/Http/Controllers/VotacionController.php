@@ -114,6 +114,7 @@ class VotacionController extends Controller
         $voto = Voto::create([
             'votacion_id' => $votacion->id,
             'vivienda_id' => $request->user()->vivienda_id,
+            'user_id'     => $request->user()->id,
             'opcion'      => $request->opcion
         ]);
 

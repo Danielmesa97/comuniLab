@@ -59,6 +59,8 @@ class SolicitudController extends Controller
 
         $solicitud->estado = 'aceptada';
         $solicitud->save();
+        $user->activo = true;
+        $user->save();
 
         return response()->json([
             'message' => 'Usuario creado correctamente',

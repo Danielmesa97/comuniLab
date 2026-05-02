@@ -29,24 +29,45 @@
 
         <!-- 🔐 LOGIN -->
         <template v-if="isLogin">
+          
+          <!-- EMAIL -->
           <div class="input-group">
             <label>Email</label>
             <input type="email" v-model="email" required>
           </div>
 
-          <div class="input-group">
+          <!-- MENSAJE UX -->
+          <p v-if="mensaje" style="color:red; margin-bottom:10px;">
+            {{ mensaje }}
+          </p>
+
+          <!-- BOTÓN CONFIGURAR PASSWORD -->
+          <button 
+            v-if="needsPassword && userActivo"
+            type="button"
+            @click="irAConfigurarPassword"
+            class="main-btn"
+            style="margin-bottom:10px;"
+          >
+            Configurar contraseña
+          </button>
+
+          <!-- CONTRASEÑA (solo si procede) -->
+          <div class="input-group" v-if="!needsPassword">
             <label>Contraseña</label>
             <input type="password" v-model="password" required>
           </div>
 
+          <!-- BOTÓN LOGIN -->
           <div class="action-area">
             <button type="submit" class="main-btn">
               Acceder
             </button>
           </div>
+
         </template>
 
-        <!--SOLICITUD -->
+        <!-- 📝 SOLICITUD -->
         <template v-else>
           <div class="input-group">
             <label>Nombre</label>
@@ -102,6 +123,7 @@
 </template>
 
 <script setup>
+const mensaje = ref('')
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -111,6 +133,9 @@ const viviendas = ref([])
 //  LOGIN
 const email = ref('')
 const password = ref('')
+// 🔥 UX PASSWORD
+const needsPassword = ref(false)
+const userActivo = ref(false)
 
 // 📝 SOLICITUD
 const form = ref({
@@ -144,18 +169,80 @@ const cargarViviendas = async () => {
   }
 }
 
+const checkUser = async () => {
+  if (!email.value) return
+
+  try {
+    const res = await fetch('http://127.0.0.1:8000/api/check-user', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        email: email.value
+      })
+    })
+
+    const data = await res.json()
+
+    // NO EXISTE
+    if (data.exists === false) {
+      mensaje.value = ''
+      needsPassword.value = false
+      userActivo.value = false
+      return
+    }
+
+    // NO ACTIVO
+    if (data.activo === false) {
+      mensaje.value = "Tu cuenta aún no ha sido aprobada"
+      needsPassword.value = false
+      userActivo.value = false
+      return
+    }
+
+    // SIN PASSWORD
+    if (data.status === 'needs_password') {
+      mensaje.value = "Debes crear tu contraseña primero"
+      needsPassword.value = true
+      userActivo.value = true
+      return
+    }
+
+    // TODO OK
+    mensaje.value = ''
+    needsPassword.value = false
+    userActivo.value = true
+
+  } catch (err) {
+    console.error(err)
+  }
+}
 
 // OBSERVAR CAMBIOS EN comunidad_id
 watch(() => form.value.comunidad_id, () => {
   cargarViviendas()
 })
+watch(email, () => {
+  checkUser()
+})
 
+const irAConfigurarPassword = () => {
+  router.push(`/set-password?email=${email.value}`)
+}
 // SUBMIT
 const handleSubmit = async () => {
 
   const url = isLogin.value
     ? 'http://127.0.0.1:8000/api/login'
     : 'http://127.0.0.1:8000/api/solicitudes'
+
+  // 🔥 BLOQUEAR LOGIN SI NO TIENE PASSWORD
+  if (isLogin.value && needsPassword.value && userActivo.value) {
+    alert("Debes configurar tu contraseña primero")
+    return
+  }
 
   const payload = isLogin.value
     ? {
@@ -188,11 +275,7 @@ const handleSubmit = async () => {
   alert(data.message)
   return
 }
-    //  errores normales
-    if (!response.ok) {
-      alert(data.message || "Error")
-      return
-    }
+   
     // LOGIN
     if (isLogin.value) {
       localStorage.setItem('auth_token', data.token)
@@ -247,6 +330,13 @@ max-width:800px;
 padding:70px 100px;
 border-radius:30px;
 box-shadow:0 15px 35px rgba(0,0,0,.15);
+}
+
+.password-warning {
+  margin-top: 10px;
+  padding: 12px;
+  background: #fff3cd;
+  border-radius: 10px;
 }
 
 .auth-form{

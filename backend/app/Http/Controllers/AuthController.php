@@ -24,6 +24,11 @@ class AuthController extends Controller
                 'message' => 'Credenciales incorrectas'
             ], 401);
         }
+        if (!$user->activo) {
+            return response()->json([
+                'message' => 'Usuario no activado aún'
+            ], 403);
+        }
 
         //  NUEVO → no tiene contraseña
         if (!$user->password) {
@@ -61,19 +66,13 @@ class AuthController extends Controller
 
     if (!$user) {
         return response()->json([
-            'status' => 'not_found'
-        ]);
-    }
-
-    if (!$user->password) {
-        return response()->json([
-            'status' => 'needs_password',
-            'email' => $user->email
+            'exists' => false
         ]);
     }
 
     return response()->json([
-        'status' => 'ok'
+        'status' => !$user->password ? 'needs_password' : 'ok',
+        'activo' => $user->activo
     ]);
 }
 

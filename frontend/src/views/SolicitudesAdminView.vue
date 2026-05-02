@@ -38,7 +38,11 @@
         <span>Votaciones</span>
       </router-link>
 
-      <router-link to="/solicitudes-admin" class="nav-item">
+      <router-link 
+        v-if="['admin','presidente','superadmin'].includes(user.role)"
+        to="/solicitudes-admin" 
+        class="nav-item"
+      >
         <span class="icon">📩</span>
         <span>Solicitudes</span>
       </router-link>
@@ -50,7 +54,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
+const user = JSON.parse(localStorage.getItem('user'))
 const solicitudes = ref([])
 
 const getSolicitudes = async () => {
@@ -63,6 +70,11 @@ const getSolicitudes = async () => {
         'Accept': 'application/json'
       }
     })
+
+    if (!res.ok) {
+      console.warn("No autorizado o error")
+      return
+    }
 
     const data = await res.json()
     solicitudes.value = data

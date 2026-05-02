@@ -11,4 +11,9 @@ class Comunidad extends Model
     'nombre',
     'descripcion'
 ];
+public function viviendas()
+{
+    return $this->hasMany(Vivienda::class);
 }
+}
+

@@ -11,6 +11,12 @@ class VotacionController extends Controller
 
     public function store(Request $request)
     {
+         // CONTROL DE ROLES
+        if (!in_array($request->user()->role, ['presidente','admin','superadmin'])) {
+            return response()->json([
+                'error' => 'No autorizado'
+            ], 403);
+    }
         // 1. Validamos los datos que nos envía Vue
         $validated = $request->validate([
             'titulo' => 'required|string|max:255',
@@ -65,7 +71,8 @@ class VotacionController extends Controller
         $votaciones = $query->orderBy('created_at', 'desc')->get();
 
         // Recuperamos los votos
-        $mis_votos = $request->user()->votos()->pluck('votacion_id');
+        $mis_votos = Voto::where('vivienda_id', $request->user()->vivienda_id)
+            ->pluck('votacion_id');
 
         return response()->json([
             'votaciones' => $votaciones,
@@ -92,15 +99,21 @@ class VotacionController extends Controller
             ], 403); 
         }
 
-        // 4. Comprobamos si el usuario ya había votado antes
-        $yaVoto = $request->user()->votos()->where('votacion_id', $votacion->id)->exists();
+        // comprobar si la vivienda ya votó
+        $yaVoto = Voto::where('votacion_id', $votacion->id)
+            ->where('vivienda_id', $request->user()->vivienda_id)
+            ->exists();
+
         if ($yaVoto) {
-            return response()->json(['message' => 'Ya has votado en esta propuesta.'], 403);
+            return response()->json([
+                'message' => 'Esta vivienda ya ha votado en esta propuesta.'
+            ], 403);
         }
 
-        
-        $voto = $request->user()->votos()->create([
+        // crear voto por vivienda
+        $voto = Voto::create([
             'votacion_id' => $votacion->id,
+            'vivienda_id' => $request->user()->vivienda_id,
             'opcion'      => $request->opcion
         ]);
 

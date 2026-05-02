@@ -28,6 +28,14 @@
                 <span class="icon">🗳️</span>
                 <span>Votaciones</span>
             </router-link>
+            <router-link 
+                v-if="user?.role === 'admin' || user?.role === 'presidente' || user?.role === 'superadmin'" 
+                to="/solicitudes-admin" 
+                class="nav-item"
+            >
+                <span class="icon">📋</span>
+                <span>Solicitudes</span>
+            </router-link>
             <router-link to="/incidencias" class="nav-item">
                 <span class="icon">👤</span>
                 <span>Perfil</span>
@@ -35,6 +43,9 @@
         </nav>
     </div>
 </template>
+  <script setup>
+    const user = JSON.parse(localStorage.getItem('user'))
+ </script>
 
 <style scoped>
     .dashboard-container{

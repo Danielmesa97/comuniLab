@@ -6,7 +6,11 @@
                 <p>Decide el futuro de tu comunidad</p>
             </div>
 
-            <button class="btn-add-circular" @click="abrirModalCrear">
+            <button 
+                v-if="['presidente','admin','superadmin'].includes(user?.role)"
+                class="btn-add-circular" 
+                @click="abrirModalCrear"
+            >
                 <span>+</span>
             </button>
         </header>
@@ -161,7 +165,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-
+const user = JSON.parse(localStorage.getItem("user"))
 const textoBusqueda = ref('');
 const votaciones = ref([]);
 const mostrarModal = ref(false); 

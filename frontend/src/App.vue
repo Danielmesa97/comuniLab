@@ -1,14 +1,25 @@
-<template> 
-  <div id="app-container"> 
-    <router-view />
-    <BottomNav /> <!-- 🔥 MENÚ GLOBAL -->
-  </div> 
-</template>
-
 <script setup>
 import BottomNav from './components/BottomNav.vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+// rutas donde NO queremos menú
+const hideNavRoutes = ['/', '/set-password']
+
+const isLogged = () => !!localStorage.getItem('auth_token')
 </script>
 
+<template>
+  <div id="app-container"> 
+    <router-view />
+
+    <!-- 🔥 SOLO SI ESTÁ LOGEADO Y NO EN LOGIN -->
+    <BottomNav 
+      v-if="isLogged() && !hideNavRoutes.includes(route.path)" 
+    />
+  </div> 
+</template>
 <style>
 /* CSS GLOBAL PARA TODA LA APLICACIÓN */
 .bottom-nav {

@@ -3,30 +3,58 @@ import LoginView from '../views/LoginView.vue'
 import Incidencias from '../views/Incidencias.vue'
 import Comunidades from '../views/Comunidades.vue'
 import DashboardView from '../views/DashboardView.vue'
-import VotacionesView from '../views/VotacionesView.vue' 
+import VotacionesView from '../views/VotacionesView.vue'
 import SolicitudView from '@/views/SolicitudView.vue'
 import SolicitudesAdminView from '@/views/SolicitudesAdminView.vue'
 
 const routes = [
   { path: '/', name: 'login', component: LoginView },
-  { path: '/dashboard', name: 'dashboard', component: DashboardView },
+
+  { path: '/dashboard', component: DashboardView },
   { path: '/incidencias', component: Incidencias },
   { path: '/comunidades', component: Comunidades },
-  { path: '/votaciones', name: 'votaciones', component: VotacionesView }, 
+  { path: '/votaciones', component: VotacionesView },
   { path: '/solicitud', component: SolicitudView },
+
+  // 🔥 SOLO ADMIN
   { path: '/solicitudes-admin', component: SolicitudesAdminView },
 
-
   { 
-    path: '/set-password', 
-    name: 'set-password',
-    component: () => import('@/views/SetPasswordView.vue') 
+    path: '/set-password',
+    component: () => import('@/views/SetPasswordView.vue')
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+/* 🔐 PROTECCIÓN GLOBAL */
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('auth_token')
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+  const publicRoutes = ['/', '/set-password']
+
+  // rutas públicas
+  if (publicRoutes.includes(to.path)) {
+    return next()
+  }
+
+  // no logeado → fuera
+  if (!token) {
+    return next('/')
+  }
+
+  // 🔥 PROTEGER ADMIN
+  if (to.path === '/solicitudes-admin') {
+    if (!['admin', 'presidente', 'superadmin'].includes(user.role)) {
+      return next('/dashboard')
+    }
+  }
+
+  next()
 })
 
 export default router

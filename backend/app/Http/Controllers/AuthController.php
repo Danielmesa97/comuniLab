@@ -4,63 +4,103 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash; // Para encriptar contraseñas
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // 1. FUNCIÓN DE REGISTRO
-    public function registro(Request $request)
-    {
-        // Validamos que nos envíen los datos correctos
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users', // unique asegura que no haya 2 iguales
-            'password' => 'required|string|min:6'
-        ]);
-
-        // Creamos el usuario en la base de datos
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password), 
-        ]);
-
-        // Le fabricamos su Token VIP
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'mensaje' => 'Usuario registrado con éxito',
-            'usuario' => $user,
-            'token' => $token
-        ], 201);
-    }
-
-    // 2. FUNCIÓN DE LOGIN
+    // 1. LOGIN
     public function login(Request $request)
     {
-        // Validamos que nos pasen email y contraseña
         $request->validate([
             'email' => 'required|email',
             'password' => 'required'
         ]);
 
-        // Buscamos al usuario en la base de datos
         $user = User::where('email', $request->email)->first();
 
-        // Si no existe o la contraseña no coincide, le echamos
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        // usuario no existe
+        if (!$user) {
             return response()->json([
-                'mensaje' => 'Credenciales incorrectas'
-            ], 401); // 401 significa "No Autorizado"
+                'message' => 'Credenciales incorrectas'
+            ], 401);
         }
 
-        // Si todo está bien, le fabricamos un Token VIP nuevo
+        //  NUEVO → no tiene contraseña
+        if (!$user->password) {
+            return response()->json([
+                'message' => 'Debes crear tu contraseña primero',
+                'needs_password' => true,
+                'email' => $user->email
+            ], 403);
+        }
+
+        // contraseña incorrecta
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Credenciales incorrectas'
+            ], 401);
+        }
+
+        // LOGIN OK
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'mensaje' => '¡Hola de nuevo!',
-            'usuario' => $user,
+            'message' => '¡Hola de nuevo!',
+            'user' => $user,
             'token' => $token
         ]);
     }
+
+    public function checkUser(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email'
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user) {
+        return response()->json([
+            'status' => 'not_found'
+        ]);
+    }
+
+    if (!$user->password) {
+        return response()->json([
+            'status' => 'needs_password',
+            'email' => $user->email
+        ]);
+    }
+
+    return response()->json([
+        'status' => 'ok'
+    ]);
+}
+
+    // 2. SET PASSWORD (NUEVO)
+    public function setPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|min:6'
+        ]);
+
+        $user = User::where('email', $request->email)->firstOrFail();
+
+        // ya tiene contraseña
+        if ($user->password) {
+            return response()->json([
+                'message' => 'Este usuario ya tiene contraseña'
+            ], 400);
+        }
+
+        // guardar contraseña
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Contraseña creada correctamente'
+        ]);
+    }
+
 }

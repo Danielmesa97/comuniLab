@@ -23,6 +23,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'vivienda_id'
     ];
 
     /**
@@ -34,6 +36,11 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function vivienda()
+    {
+        return $this->belongsTo(Vivienda::class);
+    }   
 
     /**
      * Get the attributes that should be cast.

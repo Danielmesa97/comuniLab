@@ -21,67 +21,148 @@
           class="tab-btn" 
           :class="{ 'active': !isLogin }"
         >
-          Registrarse
+          Solicitar Acceso
         </button>
       </div>
 
       <form @submit.prevent="handleSubmit" class="auth-form">
-        
-        <div class="input-group" v-if="!isLogin">
-          <label>Nombre</label>
-          <input type="text" v-model="name" placeholder="Tu nombre completo" required>
-        </div>
 
-        <div class="input-group">
-          <label>Email</label>
-          <input type="email" v-model="email" placeholder="correo@ejemplo.com" required>
-        </div>
+        <!-- 🔐 LOGIN -->
+        <template v-if="isLogin">
+          <div class="input-group">
+            <label>Email</label>
+            <input type="email" v-model="email" required>
+          </div>
 
-        <div class="input-group">
-          <label>Contraseña</label>
-          <input type="password" v-model="password" placeholder="Ingresa tu contraseña" required>
-        </div>
+          <div class="input-group">
+            <label>Contraseña</label>
+            <input type="password" v-model="password" required>
+          </div>
 
-        <div class="extra-links">
-          <a href="#">¿Olvidaste tu contraseña?</a>
-        </div>
+          <div class="action-area">
+            <button type="submit" class="main-btn">
+              Acceder
+            </button>
+          </div>
+        </template>
 
-        <div class="action-area">
-          <button type="submit" class="main-btn">
-            {{ isLogin ? 'Acceder' : 'Crear cuenta' }}
-          </button>
-        </div>
+        <!--SOLICITUD -->
+        <template v-else>
+          <div class="input-group">
+            <label>Nombre</label>
+            <input v-model="form.nombre" required>
+          </div>
+
+          <div class="input-group">
+            <label>Email</label>
+            <input type="email" v-model="form.email" required>
+          </div>
+
+          <div class="input-group">
+            <label>Rol</label>
+            <select v-model="form.role" required>
+              <option disabled value="">Selecciona</option>
+              <option value="inquilino">Inquilino</option>
+              <option value="propietario">Propietario</option>
+              <option value="presidente">Presidente</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label>ID Comunidad</label>
+            <input 
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              v-model="form.comunidad_id"
+              placeholder="Introduce ID de comunidad"
+            >
+          </div>
+
+          <div class="input-group">
+            <label>Vivienda</label>
+            <select v-model="form.vivienda_id" required>
+              <option disabled value="">Selecciona vivienda</option>
+              <option v-for="v in viviendas" :key="v.id" :value="v.id">
+                {{ v.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="action-area">
+            <button type="submit" class="main-btn">
+              Enviar solicitud
+            </button>
+          </div>
+        </template>
+
       </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router';
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 const isLogin = ref(true)
-const name = ref('') // Añadido para guardar el nombre en el registro
+const viviendas = ref([])
+
+//  LOGIN
 const email = ref('')
 const password = ref('')
+
+// 📝 SOLICITUD
+const form = ref({
+  nombre: '',
+  email: '',
+  role: '',
+  vivienda_id: '',
+  comunidad_id: ''
+})
+
 const router = useRouter()
 
+//  CARGAR VIVIENDAS SEGÚN COMUNIDAD
+const cargarViviendas = async () => {
+  if (!form.value.comunidad_id) {
+    viviendas.value = []
+    return
+  }
+
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:8000/api/viviendas?comunidad_id=${form.value.comunidad_id}`
+    )
+
+    const data = await res.json()
+
+    viviendas.value = data
+
+  } catch (error) {
+    console.error("Error cargando viviendas:", error)
+  }
+}
+
+
+// OBSERVAR CAMBIOS EN comunidad_id
+watch(() => form.value.comunidad_id, () => {
+  cargarViviendas()
+})
+
+// SUBMIT
 const handleSubmit = async () => {
-  // Elegimos la ruta según la pestaña en la que estemos
+
   const url = isLogin.value
     ? 'http://127.0.0.1:8000/api/login'
-    : 'http://127.0.0.1:8000/api/registro'
+    : 'http://127.0.0.1:8000/api/solicitudes'
 
-  // Preparamos el paquete de datos
-  const payload = {
-    email: email.value,
-    password: password.value
-  }
-
-  // Si estamos registrando, añadimos el nombre al paquete
-  if (!isLogin.value) {
-    payload.name = name.value
-  }
+  const payload = isLogin.value
+    ? {
+        email: email.value,
+        password: password.value
+      }
+    : form.value
 
   try {
     const response = await fetch(url, {
@@ -95,23 +176,49 @@ const handleSubmit = async () => {
 
     const data = await response.json()
 
-    // Si Laravel devuelve un error (ej: correo repetido, contraseña corta)
     if (!response.ok) {
-      alert(data.message || "Error en la autenticación")
+
+  // SI NECESITA PASSWORD
+      if (data.needs_password) {
+        localStorage.setItem('email_temp', data.email)
+        router.push('/set-password')
+        return
+      }
+
+  alert(data.message)
+  return
+}
+    //  errores normales
+    if (!response.ok) {
+      alert(data.message || "Error")
       return
     }
-
-    // Si todo va bien, guardamos el Token VIP
-    if (data.token) {
+    // LOGIN
+    if (isLogin.value) {
       localStorage.setItem('auth_token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      router.push('/dashboard')
+    } 
+    // SOLICITUD
+    else {
+      alert("Solicitud enviada correctamente 👍")
+
+      form.value = {
+        nombre: '',
+        email: '',
+        role: '',
+        vivienda_id: '',
+        comunidad_id: ''
+      }
+
+      viviendas.value = []
+
+      isLogin.value = true
     }
 
-    // Y teletransportamos al usuario al Dashboard
-    router.push('/dashboard')
-
   } catch (error) {
-    alert("Error de conexión. ¿Está el servidor de Laravel encendido?")
     console.error(error)
+    alert("Error de conexión con el servidor")
   }
 }
 </script>
@@ -132,23 +239,20 @@ padding:40px;
 background:#f2f2f7;
 }
 
-
 /* ---------- DESKTOP ---------- */
 .form-card{
 background:white;
 width:100%;
-max-width:800px;   /* antes 540 */
+max-width:800px;
 padding:70px 100px;
 border-radius:30px;
 box-shadow:0 15px 35px rgba(0,0,0,.15);
 }
 
-/* centra mejor el formulario dentro de la tarjeta */
 .auth-form{
 max-width:700px;
 margin:auto;
 }
-
 
 /* logo */
 .logo-section{
@@ -166,8 +270,6 @@ height:auto;
 display:block;
 }
 
-
-
 /* tabs */
 .tab-container{
 display:flex;
@@ -184,13 +286,13 @@ background:transparent;
 padding:14px;
 border-radius:12px;
 cursor:pointer;
+font-weight:600;
 }
 
 .tab-btn.active{
 background:white;
 box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
-
 
 /* inputs */
 .input-group{
@@ -201,76 +303,80 @@ margin-bottom:20px;
 display:block;
 margin-bottom:8px;
 font-weight:600;
+color:#333;
 }
 
-.input-group input{
+/* 🔥 INPUT + SELECT UNIFICADOS */
+.input-group input,
+.input-group select{
 width:100%;
-padding:18px;
+padding:14px 16px;
 border-radius:12px;
 border:1px solid #ddd;
 background:#fafafa;
-font-size:18px;
+font-size:16px;
+transition: all 0.2s ease;
 }
 
-
-/* links */
-.extra-links{
-text-align:right;
-margin-bottom:30px;
+/* focus bonito */
+.input-group input:focus,
+.input-group select:focus{
+outline:none;
+border-color:#007aff;
+background:white;
+box-shadow:0 0 0 3px rgba(0,122,255,0.1);
 }
 
-.action-area{
-margin-top:auto;
+/* placeholder estilo */
+.input-group input::placeholder{
+color:#aaa;
 }
 
+/* select flechita más limpia */
+.input-group select{
+appearance:none;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%238e8e93' viewBox='0 0 16 16'%3E%3Cpath d='M3.204 5h9.592L8 10.481 3.204 5z'/%3E%3C/svg%3E");
+background-repeat:no-repeat;
+background-position:right 12px center;
+background-size:16px;
+cursor:pointer;
+}
+
+/* estado deshabilitado */
+.input-group select:disabled{
+background:#eee;
+cursor:not-allowed;
+}
 
 /* botón */
 .main-btn{
 width:100%;
-padding:20px;
+padding:18px;
 background:#080a13;
 color:white;
 border:none;
 border-radius:14px;
-font-size:18px;
+font-size:17px;
 font-weight:bold;
 cursor:pointer;
+transition: all 0.2s ease;
 }
 
-
-
-/* ---------- PANTALLAS MUY GRANDES ---------- */
-@media (min-width:1200px){
-
-.form-card{
-width:min(90vw,700px);
-padding:50px 60px;
-margin:auto;
+.main-btn:hover{
+background:#1c1f2b;
+transform:translateY(-1px);
 }
-
-}
-
-
 
 /* ---------- TABLET ---------- */
 @media (max-width:768px){
-
 .form-card{
 max-width:500px;
 padding:40px;
 }
-
-.auth-form{
-max-width:100%;
 }
-
-}
-
-
 
 /* ---------- MÓVIL ---------- */
 @media (max-width:480px){
-
 .page-container{
 padding:0;
 background:white;
@@ -283,7 +389,5 @@ padding:35px 25px;
 border-radius:0;
 box-shadow:none;
 }
-
 }
-
 </style>

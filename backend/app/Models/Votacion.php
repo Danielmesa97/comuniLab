@@ -20,4 +20,15 @@ class Votacion extends Model
         // Una votación "tiene muchos" votos
         return $this->hasMany(Voto::class);
     }
+    public function viviendas()
+    {
+    return $this->hasManyThrough(
+        Vivienda::class,
+        Voto::class,
+        'votacion_id',   // FK en votos
+        'id',            // PK en viviendas
+        'id',            // PK en votaciones
+        'vivienda_id'    // FK en votos hacia viviendas
+    );
+    }
 }

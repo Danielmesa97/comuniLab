@@ -6,7 +6,11 @@
                 <p>Decide el futuro de tu comunidad</p>
             </div>
 
-            <button class="btn-add-circular" @click="abrirModalCrear">
+            <button 
+                v-if="['presidente','admin','superadmin'].includes(user?.role)"
+                class="btn-add-circular" 
+                @click="abrirModalCrear"
+            >
                 <span>+</span>
             </button>
         </header>
@@ -161,7 +165,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-
+const user = JSON.parse(localStorage.getItem("user"))
 const textoBusqueda = ref('');
 const votaciones = ref([]);
 const mostrarModal = ref(false); 
@@ -190,11 +194,14 @@ const getVotaciones = async () => {
             }
         });
         
-        const data = await response.json();
-        
-        // Mantenemos tu lógica intacta porque está perfecta:
-        votaciones.value = data.votaciones;       // Las tarjetas
-        votacionesVotadas.value = data.mis_votos; // Los IDs que ya votamos antes
+        const data = await response.json()
+
+        if (!response.ok) {
+            console.error(data)
+            return
+        }
+        votaciones.value = data.votaciones || []
+        votacionesVotadas.value = data.mis_votos || []
         
     } catch (error) {
         console.error("Error cargando votaciones:", error);

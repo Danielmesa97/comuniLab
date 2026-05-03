@@ -7,36 +7,57 @@ use App\Models\Incidencia;
 
 class IncidenciaController extends Controller
 {
-    // 2. Creamos la función para listar las incidencias
-    public function index()
+    // 🔹 LISTAR INCIDENCIAS
+    public function index(Request $request)
     {
-        // Traemos todas las incidencias de la base de datos
-        $incidencias = Incidencia::all();
+        $query = Incidencia::query();
 
-        // Las devolvemos convertidas en texto JSON
-        return response()->json($incidencias);
+        // 🔥 OPCIONAL: solo las del usuario
+        // $query->where('user_id', $request->user()->id);
+
+        return response()->json(
+            $query->orderBy('created_at', 'desc')->get()
+        );
     }
 
+    // 🔹 CREAR INCIDENCIA
     public function store(Request $request)
+    {
+        // 🔐 Validación
+        $data = $request->validate([
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'required|string'
+        ]);
+
+        // 🔥 DATOS AUTOMÁTICOS
+        $data['estado'] = 'pendiente';
+        $data['user_id'] = $request->user()->id; // 👈 IMPORTANTE
+
+        $incidencia = Incidencia::create($data);
+
+        return response()->json($incidencia, 201);
+    }
+    // 🔹 ACTUALIZAR ESTADO
+public function update(Request $request, $id)
 {
+    $incidencia = Incidencia::findOrFail($id);
+
+    // 🔐 PERMISOS
+    if (
+        $request->user()->id !== $incidencia->user_id &&
+        !in_array($request->user()->role, ['admin','presidente','superadmin'])
+    ) {
+        return response()->json(['error' => 'No autorizado'], 403);
+    }
+
+    // 🔥 VALIDAR ESTADO
     $request->validate([
-        'titulo' => 'required|string|max:255',
-        'descripcion' => 'required|string'
+        'estado' => 'required|in:pendiente,en_proceso,resuelto'
     ]);
 
-    $incidencia = new Incidencia();
-    $incidencia->titulo = $request->titulo;
-    $incidencia->descripcion = $request->descripcion;
-
-    // 🔥 MUY IMPORTANTE
-    $incidencia->estado = 'Pendiente';
-    $incidencia->user_id = 1; // fijo por ahora
-
+    $incidencia->estado = $request->estado;
     $incidencia->save();
 
-    return response()->json([
-        'mensaje' => 'Incidencia creada',
-        'data' => $incidencia
-    ], 201);
+    return response()->json($incidencia);
 }
 }

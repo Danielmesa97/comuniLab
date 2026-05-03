@@ -20,7 +20,7 @@
                 type="text" 
                 v-model="textoBusqueda" 
                 @input="getVotaciones" 
-                placeholder="Buscar votaciones antiguas o por título..."
+                placeholder="Buscar votaciones antiguas por título..."
                 class="search-input"
             >
         </div>

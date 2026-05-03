@@ -280,8 +280,11 @@ const handleSubmit = async () => {
     if (isLogin.value) {
       localStorage.setItem('auth_token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
-      router.push('/dashboard')
-    } 
+
+      router.push('/dashboard').then(() => {
+        window.location.reload()
+      })
+    }
     // SOLICITUD
     else {
       alert("Solicitud enviada correctamente 👍")

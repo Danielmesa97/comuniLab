@@ -6,6 +6,7 @@ import DashboardView from '../views/DashboardView.vue'
 import VotacionesView from '../views/VotacionesView.vue'
 import SolicitudView from '@/views/SolicitudView.vue'
 import SolicitudesAdminView from '@/views/SolicitudesAdminView.vue'
+import AnunciosView from '@/views/AnunciosView.vue'
 
 const routes = [
   { path: '/', name: 'login', component: LoginView },
@@ -15,6 +16,7 @@ const routes = [
   { path: '/comunidades', component: Comunidades },
   { path: '/votaciones', component: VotacionesView },
   { path: '/solicitud', component: SolicitudView },
+  { path: '/anuncios', component: AnunciosView },
 
   // 🔥 SOLO ADMIN
   { path: '/solicitudes-admin', component: SolicitudesAdminView },

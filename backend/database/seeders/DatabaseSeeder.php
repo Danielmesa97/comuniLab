@@ -77,7 +77,7 @@ class DatabaseSeeder extends Seeder
                 'votacion_id' => $votacionId,
                 'opcion' => 'si',
                 // Descomenta la siguiente línea una vez arregles tu migración:
-                // 'vivienda_id' => $vivienda1Id, 
+                 'vivienda_id' => $vivienda1Id, 
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ]

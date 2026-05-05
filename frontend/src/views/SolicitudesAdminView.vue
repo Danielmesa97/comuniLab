@@ -1,6 +1,5 @@
 <template>
   <div class="page-container">
-
     <div class="form-card">
       <h2>Solicitudes pendientes</h2>
 
@@ -25,7 +24,7 @@
     <nav class="bottom-nav">
       <router-link to="/dashboard" class="nav-item">
         <span class="icon">🏠</span>
-        <span>Inicio</span> 
+        <span>Inicio</span>
       </router-link>
 
       <router-link to="/incidencias" class="nav-item">
@@ -38,23 +37,22 @@
         <span>Votaciones</span>
       </router-link>
 
-      <router-link 
-        v-if="['admin','presidente','superadmin'].includes(user.role)"
-        to="/solicitudes-admin" 
+      <router-link
+        v-if="['admin', 'presidente', 'superadmin'].includes(user.role)"
+        to="/solicitudes-admin"
         class="nav-item"
       >
         <span class="icon">📩</span>
         <span>Solicitudes</span>
       </router-link>
     </nav>
-
   </div>
 </template>
-
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { apiUrl } from '@/lib/api'
 
 const router = useRouter()
 const user = JSON.parse(localStorage.getItem('user'))
@@ -64,21 +62,20 @@ const getSolicitudes = async () => {
   try {
     const token = localStorage.getItem('auth_token')
 
-    const res = await fetch('http://127.0.0.1:8000/api/solicitudes', {
+    const res = await fetch(apiUrl('/api/solicitudes'), {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
-      }
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
     })
 
     if (!res.ok) {
-      console.warn("No autorizado o error")
+      console.warn('No autorizado o error')
       return
     }
 
     const data = await res.json()
     solicitudes.value = data
-
   } catch (err) {
     console.error(err)
   }
@@ -87,11 +84,11 @@ const getSolicitudes = async () => {
 const aceptar = async (id) => {
   const token = localStorage.getItem('auth_token')
 
-  await fetch(`http://127.0.0.1:8000/api/solicitudes/${id}/aceptar`, {
+  await fetch(apiUrl(`/api/solicitudes/${id}/aceptar`), {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   })
 
   getSolicitudes()
@@ -100,11 +97,11 @@ const aceptar = async (id) => {
 const rechazar = async (id) => {
   const token = localStorage.getItem('auth_token')
 
-  await fetch(`http://127.0.0.1:8000/api/solicitudes/${id}/rechazar`, {
+  await fetch(apiUrl(`/api/solicitudes/${id}/rechazar`), {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   })
 
   getSolicitudes()
@@ -114,7 +111,6 @@ onMounted(getSolicitudes)
 </script>
 
 <style scoped>
-
 .page-container {
   width: 100%;
   min-height: 100vh;
@@ -134,7 +130,7 @@ onMounted(getSolicitudes)
   padding: 20px;
   border-radius: 16px;
   margin-bottom: 15px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
 }
 
 .card h3 {
@@ -174,9 +170,9 @@ onMounted(getSolicitudes)
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 0;          /* 🔥 IMPORTANTE */
+  left: 0; /* 🔥 IMPORTANTE */
   width: 100%;
-  height: 60px;     /* opcional pero recomendado */
+  height: 60px; /* opcional pero recomendado */
 
   display: flex;
   justify-content: space-around;
@@ -184,6 +180,6 @@ onMounted(getSolicitudes)
 
   background: white;
   border-top: 1px solid #ddd;
-  z-index: 999;     /* 🔥 para que esté siempre encima */
+  z-index: 999; /* 🔥 para que esté siempre encima */
 }
 </style>

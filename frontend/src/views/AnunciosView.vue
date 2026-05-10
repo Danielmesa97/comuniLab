@@ -113,7 +113,7 @@ const form = ref({
 })
 
 /* ======================================
-   🔥 NUEVO: ICONOS POR TIPO
+   
 ====================================== */
 const getIcono = (tipo) => {
   const map = {

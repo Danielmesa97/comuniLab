@@ -20,6 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 401);
         });
     })
+
+    ->withMiddleware(function ($middleware) {
+        $middleware->alias([
+            'superadmin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+        ]);
+    })
+
     ->withMiddleware(function (Middleware $middleware): void {
 //        // 🔥 AÑADE ESTO (MUY IMPORTANTE)
 //        $middleware->append(EnsureFrontendRequestsAreStateful::class);
@@ -28,3 +35,4 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
     })
     ->create();
+

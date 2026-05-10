@@ -11,6 +11,7 @@ class Anuncio extends Model
         'descripcion',
         'tipo',
         'fecha_inicio',
-        'fecha_fin'
+        'fecha_fin',
+        'comunidad_id'
     ];
 }

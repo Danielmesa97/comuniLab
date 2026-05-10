@@ -10,7 +10,12 @@ class IncidenciaController extends Controller
     // 🔹 LISTAR INCIDENCIAS
     public function index(Request $request)
     {
-        $query = Incidencia::query();
+        $comunidadId = $request->user()->vivienda->comunidad_id;
+
+        $query = Incidencia::where(
+            'comunidad_id',
+            $comunidadId
+);
 
         // 🔥 OPCIONAL: solo las del usuario
         // $query->where('user_id', $request->user()->id);
@@ -23,15 +28,16 @@ class IncidenciaController extends Controller
     // 🔹 CREAR INCIDENCIA
     public function store(Request $request)
     {
-        // 🔐 Validación
+        // Validación
         $data = $request->validate([
             'titulo' => 'required|string|max:255',
             'descripcion' => 'required|string'
         ]);
 
-        // 🔥 DATOS AUTOMÁTICOS
+        // DATOS AUTOMÁTICOS
         $data['estado'] = 'pendiente';
-        $data['user_id'] = $request->user()->id; // 👈 IMPORTANTE
+        $data['user_id'] = $request->user()->id;
+        $data['comunidad_id'] = $request->user()->vivienda->comunidad_id;
 
         $incidencia = Incidencia::create($data);
 

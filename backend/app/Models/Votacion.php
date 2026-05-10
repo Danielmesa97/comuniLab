@@ -12,7 +12,7 @@ class Votacion extends Model
     
     protected $table = 'votaciones'; 
 
-    protected $fillable = ['titulo', 'descripcion', 'estado', 'fecha_limite'];
+    protected $fillable = ['titulo', 'descripcion', 'estado', 'fecha_limite', 'comunidad_id'];
 
     //contar votos
     public function votos()
@@ -28,7 +28,8 @@ class Votacion extends Model
         'votacion_id',   // FK en votos
         'id',            // PK en viviendas
         'id',            // PK en votaciones
-        'vivienda_id'    // FK en votos hacia viviendas
+        'vivienda_id',    // FK en votos hacia viviendas
+        'comunidad_id'
     );
     }
 }

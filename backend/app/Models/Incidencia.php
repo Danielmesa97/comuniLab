@@ -15,6 +15,7 @@ class Incidencia extends Model
         'foto',
         'estado',
         'user_id',
+        'comunidad_id',
     ];
 
     protected $attributes = [

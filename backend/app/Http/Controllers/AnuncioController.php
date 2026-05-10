@@ -10,7 +10,12 @@ class AnuncioController extends Controller
     // 📢 LISTAR ANUNCIOS
     public function index(Request $request)
     {
-        $query = Anuncio::query();
+        $comunidadId = $request->user()->vivienda->comunidad_id;
+
+        $query = Anuncio::where(
+            'comunidad_id',
+            $comunidadId
+        );
 
         $user = $request->user();
 
@@ -54,6 +59,8 @@ class AnuncioController extends Controller
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio'
         ]);
+
+        $data['comunidad_id'] = $request->user()->vivienda->comunidad_id;
 
         $anuncio = Anuncio::create($data);
 

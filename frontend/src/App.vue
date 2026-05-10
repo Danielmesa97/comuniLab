@@ -1,25 +1,45 @@
+<template>
+
+  <div id="app-container">
+
+    <router-view />
+
+    <!-- SOLO USUARIOS NORMALES -->
+
+    <BottomNav
+      v-if="
+        isLogged() &&
+        !hideNavRoutes.includes(route.path) &&
+        !isSuperAdmin
+      "
+    />
+
+  </div>
+
+</template>
+
 <script setup>
-import BottomNav from './components/BottomNav.vue'
+
 import { useRoute } from 'vue-router'
+import BottomNav from '@/components/BottomNav.vue'
 
 const route = useRoute()
 
-// rutas donde NO queremos menú
-const hideNavRoutes = ['/', '/set-password']
+const hideNavRoutes = [
+  '/',
+  '/login',
+  '/set-password'
+]
 
-const isLogged = () => !!localStorage.getItem('auth_token')
+const isLogged = () => {
+  return !!localStorage.getItem('auth_token')
+}
+
+const user = JSON.parse(localStorage.getItem('user'))
+
+const isSuperAdmin = user?.role === 'superadmin'
+
 </script>
-
-<template>
-  <div id="app-container"> 
-    <router-view />
-
-    <!-- 🔥 SOLO SI ESTÁ LOGEADO Y NO EN LOGIN -->
-    <BottomNav 
-      v-if="isLogged() && !hideNavRoutes.includes(route.path)" 
-    />
-  </div> 
-</template>
 <style>
 /* CSS GLOBAL PARA TODA LA APLICACIÓN */
 .bottom-nav {

@@ -258,14 +258,31 @@ const handleSubmit = async () => {
       return
     }
 
+    
     // LOGIN
     if (isLogin.value) {
+
       localStorage.setItem('auth_token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
 
-      router.push('/dashboard').then(() => {
-        window.location.reload()
-      })
+      // SUPERADMIN
+      if (data.user.role === 'superadmin') {
+
+        router.push('/superadmin').then(() => {
+          window.location.reload()
+        })
+
+      }
+
+      //  RESTO DE USUARIOS
+      else {
+
+        router.push('/dashboard').then(() => {
+          window.location.reload()
+        })
+
+      }
+
     }
     // SOLICITUD
     else {

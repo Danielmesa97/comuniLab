@@ -8,6 +8,11 @@ import SolicitudView from '@/views/SolicitudView.vue'
 import SolicitudesAdminView from '@/views/SolicitudesAdminView.vue'
 import AnunciosView from '@/views/AnunciosView.vue'
 
+
+import SuperAdminDashboard from '../views/superadmin/SuperAdminDashboard.vue'
+import ComunidadesAdmin from '../views/superadmin/ComunidadesAdmin.vue'
+import SuperAdminLayout from '../views/superadmin/SuperAdminLayout.vue'
+
 const routes = [
   { path: '/', name: 'login', component: LoginView },
 
@@ -17,8 +22,28 @@ const routes = [
   { path: '/votaciones', component: VotacionesView },
   { path: '/solicitud', component: SolicitudView },
   { path: '/anuncios', component: AnunciosView },
+  
+  {
+  path: '/superadmin',
+  component: SuperAdminLayout,
 
-  // 🔥 SOLO ADMIN
+  children: [
+
+    {
+      path: '',
+      component: SuperAdminDashboard,
+    },
+
+    {
+      path: 'comunidades',
+      component: ComunidadesAdmin,
+    },
+
+  ]
+
+},
+
+  // SOLO ADMIN
   { path: '/solicitudes-admin', component: SolicitudesAdminView },
 
   { 

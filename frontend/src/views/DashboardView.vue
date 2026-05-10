@@ -1,36 +1,28 @@
 <template>
   <div class="dashboard-container">
-
     <!-- HEADER -->
     <header class="dashboard-header">
+      <div class="gretting">
+        <h1>Bienvenido</h1>
+        <p>Tu comunidad está al día</p>
+      </div>
 
-  <div class="gretting">
-    <h1>Bienvenido</h1>
-    <p>Tu comunidad está al día</p>
-  </div>
+      <!-- 🔥 ACCIONES DERECHA -->
+      <div class="header-actions">
+        <button class="icon-btn">🔔</button>
 
-  <!-- 🔥 ACCIONES DERECHA -->
-  <div class="header-actions">
-
-    <button class="icon-btn">🔔</button>
-
-    <button class="logout-btn" @click="logout">
-      🚪
-    </button>
-
-  </div>
-
-</header>
+        <button class="logout-btn" @click="logout">🚪</button>
+      </div>
+    </header>
 
     <!-- CONTENIDO -->
     <main class="main-container">
-
       <!-- 📢 ANUNCIOS -->
       <section class="card">
         <h2>📢 Últimos anuncios</h2>
 
         <div v-if="anuncios.length === 0">
-          <p> No hay anuncios activos</p>
+          <p>No hay anuncios activos</p>
         </div>
 
         <div v-for="a in anuncios" :key="a.id" class="mini-item">
@@ -38,9 +30,7 @@
           <p>{{ a.descripcion }}</p>
         </div>
 
-        <router-link to="/anuncios" class="ver-mas">
-          Ver todos →
-        </router-link>
+        <router-link to="/anuncios" class="ver-mas"> Ver todos → </router-link>
       </section>
 
       <!-- ⚠️ INCIDENCIAS -->
@@ -48,7 +38,7 @@
         <h2>⚠️ Últimas incidencias</h2>
 
         <div v-if="incidencias.length === 0">
-          <p> No hay incidencias</p>
+          <p>No hay incidencias</p>
         </div>
 
         <div v-for="i in incidencias" :key="i.id" class="mini-item">
@@ -56,9 +46,7 @@
           <p>{{ i.descripcion }}</p>
         </div>
 
-        <router-link to="/incidencias" class="ver-mas">
-          Ver todas →
-        </router-link>
+        <router-link to="/incidencias" class="ver-mas"> Ver todas → </router-link>
       </section>
 
       <!-- 🗳️ VOTACIONES -->
@@ -73,11 +61,8 @@
           <strong>{{ v.titulo || v.nombre }}</strong>
         </div>
 
-        <router-link to="/votaciones" class="ver-mas">
-          Ver todas →
-        </router-link>
+        <router-link to="/votaciones" class="ver-mas"> Ver todas → </router-link>
       </section>
-
     </main>
   </div>
 </template>
@@ -85,11 +70,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { apiUrl } from '@/lib/api'
 
 const router = useRouter()
 
 const logout = () => {
-  const confirmar = confirm("¿Seguro que quieres cerrar sesión?")
+  const confirmar = confirm('¿Seguro que quieres cerrar sesión?')
   if (!confirmar) return
 
   localStorage.removeItem('auth_token')
@@ -107,24 +93,26 @@ const votaciones = ref([])
 const token = localStorage.getItem('auth_token')
 
 const getData = async () => {
-    //console.log("VOTACIONES:", votaciones.value)
+  //console.log("VOTACIONES:", votaciones.value)
   try {
     // ANUNCIOS
-    const resA = await fetch('http://127.0.0.1:8000/api/anuncios', {
-      headers: { Authorization: `Bearer ${token}` }
+    const resA = await fetch(apiUrl('/api/anuncios'), {
+      headers: { Authorization: `Bearer ${token}` },
     })
     anuncios.value = await resA.json()
 
     // INCIDENCIAS
-    const resI = await fetch('http://127.0.0.1:8000/api/incidencias', {
-      headers: { Authorization: `Bearer ${token}` }
+    const resI = await fetch(apiUrl('/api/incidencias'), {
+      headers: { Authorization: `Bearer ${token}` },
     })
     incidencias.value = await resI.json()
 
     // VOTACIONES
+    const resV = await fetch(apiUrl('/api/votaciones'), {
+      headers: { Authorization: `Bearer ${token}` },
+    })
     const data = await resV.json()
-    votaciones.value = data.votaciones.filter(v => v.estado === 'activa')
-
+    votaciones.value = (data.votaciones || data || []).filter((v) => v.estado === 'activa')
   } catch (err) {
     console.error(err)
   }
@@ -134,9 +122,8 @@ onMounted(getData)
 </script>
 
 <style scoped>
-
-.dashboard-container{
-  display:flex;
+.dashboard-container {
+  display: flex;
   flex-direction: column;
   width: 100%;
   min-height: 100vh;
@@ -144,7 +131,7 @@ onMounted(getData)
 }
 
 /* HEADER */
-.dashboard-header{
+.dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -153,18 +140,18 @@ onMounted(getData)
   border-bottom: 2px solid #e5e5e5;
 }
 
-.gretting h1{
-  font-size: 24px; 
-  margin: 0; 
+.gretting h1 {
+  font-size: 24px;
+  margin: 0;
 }
 
-.gretting p{
-  font-size: 12px; 
+.gretting p {
+  font-size: 12px;
   margin-top: 5px;
   color: #8e8e8e;
 }
 
-.icon-btn{
+.icon-btn {
   height: 35px;
   width: 35px;
   background: #f2f2f7;
@@ -194,7 +181,7 @@ onMounted(getData)
 }
 
 /* CONTENIDO */
-.main-container{
+.main-container {
   flex: 1;
   display: grid;
   gap: 20px;
@@ -230,9 +217,9 @@ onMounted(getData)
   width: 100%;
 
   max-height: 50vh; /* 🔥 clave */
-  overflow: auto;   /* 🔥 scroll interno */
+  overflow: auto; /* 🔥 scroll interno */
 
-  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
 }
 
 .card h2 {
@@ -273,11 +260,11 @@ onMounted(getData)
 }
 
 /* DESKTOP */
-@media (min-width: 1024px){
-  .dashboard-header, .main-container{         
+@media (min-width: 1024px) {
+  .dashboard-header,
+  .main-container {
     padding-left: 10%;
     padding-right: 10%;
   }
 }
-
 </style>

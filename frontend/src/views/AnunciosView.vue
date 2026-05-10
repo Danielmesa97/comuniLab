@@ -1,68 +1,54 @@
-<<template>
+<
+<template>
   <div class="page-container">
-
     <!-- HEADER -->
     <div class="header">
       <h2>📢 Tablero de anuncios</h2>
 
       <!-- 🔍 FILTRO ADMIN -->
       <div v-if="isAdmin" class="filters">
-        <input type="date" v-model="filtroDesde">
-        <input type="date" v-model="filtroHasta">
+        <input type="date" v-model="filtroDesde" />
+        <input type="date" v-model="filtroHasta" />
         <button @click="getAnuncios">Filtrar</button>
       </div>
 
       <!-- ➕ CREAR -->
-      <button 
-        v-if="isAdmin"
-        class="create-btn"
-        @click="mostrarModal = true"
-      >
+      <button v-if="isAdmin" class="create-btn" @click="mostrarModal = true">
         ➕ Crear anuncio
       </button>
     </div>
 
     <!-- LISTADO -->
     <div class="main-container">
-
       <div v-if="anuncios.length === 0" class="empty">
         <p>No hay anuncios disponibles</p>
       </div>
 
-      <div 
-  v-for="a in anunciosOrdenados" 
-  :key="a.id" 
-  class="anuncio-card"
-  :class="a.tipo"
->
+      <div v-for="a in anunciosOrdenados" :key="a.id" class="anuncio-card" :class="a.tipo">
+        <!-- ICONO GRANDE -->
+        <div class="icono">
+          {{ getIcono(a.tipo) }}
+        </div>
 
-  <!-- ICONO GRANDE -->
-  <div class="icono">
-    {{ getIcono(a.tipo) }}
-  </div>
+        <div class="contenido">
+          <h3>{{ a.titulo }}</h3>
 
-  <div class="contenido">
-    <h3>{{ a.titulo }}</h3>
+          <p class="descripcion">{{ a.descripcion }}</p>
 
-    <p class="descripcion">{{ a.descripcion }}</p>
-
-    <div class="footer">
-      <span class="tipo">{{ formatTipo(a.tipo) }}</span>
-      <span class="fechas">
-        {{ a.fecha_inicio }} → {{ a.fecha_fin }}
-      </span>
+          <div class="footer">
+            <span class="tipo">{{ formatTipo(a.tipo) }}</span>
+            <span class="fechas"> {{ a.fecha_inicio }} → {{ a.fecha_fin }} </span>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
- </div>
-</div>
 
     <!-- MODAL CREAR -->
     <div v-if="mostrarModal" class="modal-overlay">
       <div class="modal">
-
         <h3>Nuevo anuncio</h3>
 
-        <input v-model="form.titulo" placeholder="Título">
+        <input v-model="form.titulo" placeholder="Título" />
 
         <textarea v-model="form.descripcion" placeholder="Descripción"></textarea>
 
@@ -73,22 +59,21 @@
           <option value="documento">Documento</option>
         </select>
 
-        <input type="date" v-model="form.fecha_inicio">
-        <input type="date" v-model="form.fecha_fin">
+        <input type="date" v-model="form.fecha_inicio" />
+        <input type="date" v-model="form.fecha_fin" />
 
         <div class="modal-actions">
           <button @click="crearAnuncio">Guardar</button>
           <button @click="mostrarModal = false">Cancelar</button>
         </div>
-
       </div>
     </div>
-
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { apiUrl } from '@/lib/api'
 
 const anuncios = ref([])
 const mostrarModal = ref(false)
@@ -99,9 +84,7 @@ const filtroHasta = ref('')
 // USER
 const user = JSON.parse(localStorage.getItem('user') || '{}')
 
-const isAdmin = computed(() =>
-  ['admin','presidente','superadmin'].includes(user.role)
-)
+const isAdmin = computed(() => ['admin', 'presidente', 'superadmin'].includes(user.role))
 
 // FORM
 const form = ref({
@@ -109,7 +92,7 @@ const form = ref({
   descripcion: '',
   tipo: 'noticia',
   fecha_inicio: '',
-  fecha_fin: ''
+  fecha_fin: '',
 })
 
 /* ======================================
@@ -117,12 +100,12 @@ const form = ref({
 ====================================== */
 const getIcono = (tipo) => {
   const map = {
-    noticia: "📰",
-    evento: "📅",
-    aviso: "⚠️",
-    documento: "📄"
+    noticia: '📰',
+    evento: '📅',
+    aviso: '⚠️',
+    documento: '📄',
   }
-  return map[tipo] || "📌"
+  return map[tipo] || '📌'
 }
 
 /* ======================================
@@ -133,7 +116,7 @@ const anunciosOrdenados = computed(() => {
     aviso: 1,
     evento: 2,
     noticia: 3,
-    documento: 4
+    documento: 4,
   }
 
   return [...anuncios.value].sort((a, b) => {
@@ -148,7 +131,7 @@ const getAnuncios = async () => {
   try {
     const token = localStorage.getItem('auth_token')
 
-    let url = 'http://127.0.0.1:8000/api/anuncios'
+    let url = apiUrl('/api/anuncios')
 
     if (filtroDesde.value && filtroHasta.value) {
       url += `?desde=${filtroDesde.value}&hasta=${filtroHasta.value}`
@@ -156,14 +139,13 @@ const getAnuncios = async () => {
 
     const res = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
-      }
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
     })
 
     const data = await res.json()
     anuncios.value = data
-
   } catch (err) {
     console.error(err)
   }
@@ -176,24 +158,23 @@ const crearAnuncio = async () => {
   try {
     const token = localStorage.getItem('auth_token')
 
-    const res = await fetch('http://127.0.0.1:8000/api/anuncios', {
+    const res = await fetch(apiUrl('/api/anuncios'), {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(form.value)
+      body: JSON.stringify(form.value),
     })
 
     if (!res.ok) {
-      alert("Error creando anuncio")
+      alert('Error creando anuncio')
       return
     }
 
     mostrarModal.value = false
     resetForm()
     getAnuncios()
-
   } catch (err) {
     console.error(err)
   }
@@ -208,7 +189,7 @@ const resetForm = () => {
     descripcion: '',
     tipo: 'noticia',
     fecha_inicio: '',
-    fecha_fin: ''
+    fecha_fin: '',
   }
 }
 
@@ -217,10 +198,10 @@ const resetForm = () => {
 ====================================== */
 const formatTipo = (tipo) => {
   const map = {
-    noticia: "📰 Noticias",
-    evento: "📅 Evento",
-    aviso: "⚠️ Aviso",
-    documento: "📄 Documento"
+    noticia: '📰 Noticias',
+    evento: '📅 Evento',
+    aviso: '⚠️ Aviso',
+    documento: '📄 Documento',
   }
   return map[tipo] || tipo
 }
@@ -228,7 +209,6 @@ const formatTipo = (tipo) => {
 onMounted(getAnuncios)
 </script>
 <style scoped>
-
 .page-container {
   padding: 20px;
   padding-bottom: 80px;
@@ -292,7 +272,7 @@ onMounted(getAnuncios)
   border-radius: 20px;
   padding: 20px;
   margin-bottom: 15px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
   transition: all 0.2s ease;
   position: relative;
 }
@@ -361,25 +341,27 @@ onMounted(getAnuncios)
 /* MODAL */
 .modal-overlay {
   position: fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background: rgba(0,0,0,0.4);
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 2000;
 }
 
 .modal {
-  background:white;
-  padding:25px;
-  border-radius:20px;
-  width:90%;
-  max-width:400px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  background: white;
+  padding: 25px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 /* INPUTS MODAL */
@@ -398,26 +380,25 @@ onMounted(getAnuncios)
 
 /* BOTONES MODAL */
 .modal-actions {
-  display:flex;
-  gap:10px;
+  display: flex;
+  gap: 10px;
 }
 
 .modal-actions button {
-  flex:1;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:bold;
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 .modal-actions button:first-child {
-  background:#080a13;
-  color:white;
+  background: #080a13;
+  color: white;
 }
 
 .modal-actions button:last-child {
-  background:#eee;
+  background: #eee;
 }
-
 </style>

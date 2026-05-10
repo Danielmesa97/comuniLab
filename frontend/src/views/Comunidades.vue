@@ -1,14 +1,12 @@
 <template>
-  <div style="padding:20px;">
+  <div style="padding: 20px">
     <h2>Comunidades</h2>
 
     <!-- FORMULARIO -->
     <input v-model="nombre" placeholder="Nombre" />
     <input v-model="descripcion" placeholder="Descripción" />
 
-    <button @click="crearComunidad">
-      Crear comunidad
-    </button>
+    <button @click="crearComunidad">Crear comunidad</button>
 
     <hr />
 
@@ -22,42 +20,44 @@
 </template>
 
 <script>
+import { apiUrl } from '@/lib/api'
+
 export default {
   data() {
     return {
-      nombre: "",
-      descripcion: "",
-      comunidades: []
+      nombre: '',
+      descripcion: '',
+      comunidades: [],
     }
   },
 
   methods: {
     async cargarComunidades() {
-      const res = await fetch("http://127.0.0.1:8000/comunidades")
+      const res = await fetch(apiUrl('/comunidades'))
       this.comunidades = await res.json()
     },
 
     async crearComunidad() {
-      await fetch("http://127.0.0.1:8000/comunidades", {
-        method: "POST",
+      await fetch(apiUrl('/comunidades'), {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           nombre: this.nombre,
-          descripcion: this.descripcion
-        })
+          descripcion: this.descripcion,
+        }),
       })
 
-      this.nombre = ""
-      this.descripcion = ""
+      this.nombre = ''
+      this.descripcion = ''
 
       this.cargarComunidades()
-    }
+    },
   },
 
   mounted() {
     this.cargarComunidades()
-  }
+  },
 }
 </script>

@@ -29,7 +29,9 @@
       <section class="votaciones-wrapper">
         <div v-if="votaciones.length > 0" class="list-container">
           <div v-for="v in votaciones" :key="v.id" class="votacion-card">
-            <span class="percentage-badge"> 👍 {{ calcularPorcentajeSi(v) }}% Sí </span>
+            <button class="percentage-badge-btn" @click="verResultados(v)">
+              📊 Ver Resultados ({{ calcularPorcentajeSi(v) }}% Sí)
+            </button>
 
             <div class="card-info">
               <h3>{{ v.titulo }}</h3>
@@ -183,6 +185,30 @@
       </div>
     </div>
 
+    <div v-if="mostrarModalResultados" class="modal-overlay">
+      <div class="modal-content resultados-modal">
+        <h3>Resultados: {{ tituloVotacionResultados }}</h3>
+        
+        <div class="tabla-resultados">
+          <div class="tabla-header">
+            <span>Vivienda</span>
+            <span>Voto</span>
+          </div>
+          <div v-for="voto in resultadosSeleccionados" :key="voto.id" class="tabla-fila">
+            <span class="piso-nombre">Piso {{ voto.vivienda.nombre }}</span>
+            <span :class="['voto-tag', voto.opcion]">
+              {{ voto.opcion === 'si' ? '👍 SÍ' : '👎 NO' }}
+            </span>
+          </div>
+          <div v-if="resultadosSeleccionados.length === 0" class="no-votos">
+            Aún no hay votos registrados.
+          </div>
+        </div>
+
+        <button class="btn-cancelar" @click="mostrarModalResultados = false">Cerrar</button>
+      </div>
+    </div>
+
     <nav class="bottom-nav">
       <router-link to="/dashboard" class="nav-item">
         <span class="icon">🏠</span><span> Inicio</span>
@@ -215,6 +241,12 @@ const votaciones = ref([])
 const votacionesVotadas = ref([])
 const delegacionesPendientes = ref([]) 
 const viviendasDisponibles = ref([]) 
+
+// --- NUEVAS CONSTANTES PARA RESULTADOS PÚBLICOS ---
+const mostrarModalResultados = ref(false)   // Controla el nuevo modal de la matriz
+const resultadosSeleccionados = ref([])     // Guarda los votos detallados (Piso + Opción)
+const tituloVotacionResultados = ref('')    // Título para la cabecera del modal
+// --------------------------------------------------
 
 // Estados de los Modales
 const mostrarModal = ref(false)         // Modal para votar (propio o delegado)
@@ -264,6 +296,14 @@ const getVotaciones = async () => {
   }
 }
 
+// NUEVA FUNCIÓN PARA LA MATRIZ DE RESULTADOS
+const verResultados = (votacion) => {
+  tituloVotacionResultados.value = votacion.titulo
+  // Filtramos los votos que ya tienen una opción elegida (ignoramos delegaciones vacías)
+  resultadosSeleccionados.value = votacion.votos ? votacion.votos.filter(v => v.opcion !== null) : []
+  mostrarModalResultados.value = true
+}
+
 const isVoted = (id) => votacionesVotadas.value.includes(id)
 
 const estaActiva = (fechaLimite) => {
@@ -275,7 +315,6 @@ const calcularPorcentajeSi = (votacion) => {
   if (!votacion.votos_count || votacion.votos_count === 0) return 0
   return Math.round((votacion.votos_si_count / votacion.votos_count) * 100)
 }
-
 
 // ============================================================================
 // 3. LÓGICA DE VOTACIÓN (PROPIA Y EN NOMBRE DE OTRO)
@@ -324,6 +363,12 @@ const enviarVoto = async (opcion) => {
     })
 
     if (response.ok) {
+      // 1. Cerramos el modal primero para dar sensación de velocidad
+      mostrarModal.value = false
+      delegacionActiva.value = null
+
+      // Volvemos a pedir los datos al servidor para actualizar porcentajes y matriz
+      await getVotaciones()
       if (esDelegado) {
         // Ocultamos visualmente la delegación que acabamos de resolver
         delegacionesPendientes.value = delegacionesPendientes.value.filter(d => d.id !== delegacionActiva.value.id)
@@ -381,7 +426,6 @@ const iniciarDelegacion = async (votacion) => {
 const confirmarDelegacion = async () => {
   try {
     const token = localStorage.getItem('auth_token')
-
     const response = await fetch(apiUrl('/api/votaciones/delegar'), {
       method: 'POST',
       headers: {
@@ -396,8 +440,11 @@ const confirmarDelegacion = async () => {
     })
 
     if (response.ok) {
-      votacionesVotadas.value.push(votacionSeleccionada.value.id)
       mostrarModalDelegar.value = false
+      
+      // Refrescamos para que el botón de la votación cambie a "Ya has participado"
+      await getVotaciones() 
+      
       alert('¡Has delegado tu voto correctamente!')
     } else {
       const errorData = await response.json()
@@ -692,5 +739,76 @@ onMounted(() => {
   outline: none;
   border-color: #007aff;
   box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.percentage-badge-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: #e0f7fa;
+  color: #00796b;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.percentage-badge-btn:hover {
+  transform: scale(1.05);
+  background-color: #b2ebf2;
+}
+
+.resultados-modal {
+  max-width: 450px;
+}
+
+.tabla-resultados {
+  margin: 20px 0;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e5e5ea;
+  border-radius: 12px;
+}
+
+.tabla-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background: #f2f2f7;
+  font-weight: bold;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.tabla-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  border-bottom: 1px solid #f2f2f7;
+}
+
+.piso-nombre {
+  font-weight: 500;
+  color: #333;
+}
+
+.voto-tag {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.voto-tag.si {
+  background: #e1ffdc;
+  color: #28a745;
+}
+
+.voto-tag.no {
+  background: #ffdce0;
+  color: #d73a49;
 }
 </style>

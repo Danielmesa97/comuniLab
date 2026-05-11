@@ -47,6 +47,7 @@ class VotacionController extends Controller
 
         // --- 1. CONSULTA DE VOTACIONES (Tu lógica original) ---
         $query = Votacion::where('comunidad_id', $comunidadId)
+            ->with(['votos.vivienda']) // <-- AÑADIMOS ESTO para traer el detalle de los votos y el nombre del piso
             ->withCount('votos')
             ->withCount(['votos as votos_si_count' => function ($q) {
                 $q->where('opcion', 'si'); 

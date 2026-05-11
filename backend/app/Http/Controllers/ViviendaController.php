@@ -3,18 +3,18 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Vivienda;
+use App\Models\Vivienda; // Asegúrate de importar el modelo
 
 class ViviendaController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $query = Vivienda::query();
+        // Extraemos todas las viviendas de la base de datos
+        $viviendas = Vivienda::all();
 
-        if ($request->has('comunidad_id')) {
-            $query->where('comunidad_id', $request->comunidad_id);
-        }
-
-        return $query->get();
+        // Las devolvemos en formato JSON para que Vue las entienda
+        return response()->json([
+            'viviendas' => $viviendas
+        ]);
     }
 }

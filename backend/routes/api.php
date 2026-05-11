@@ -24,7 +24,6 @@ Route::post('/set-password', [AuthController::class, 'setPassword']);
 Route::post('/check-user', [AuthController::class, 'checkUser']);
 
 Route::get('/comunidades', [ComunidadController::class, 'index']);
-Route::get('/viviendas', [ViviendaController::class, 'index']);
 
 Route::post('/solicitudes', [SolicitudController::class, 'store']);
 
@@ -37,6 +36,14 @@ Route::post('/solicitudes', [SolicitudController::class, 'store']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
+    /*
+    |--------------------------------------------------------------------------
+    | VIVIENDAS
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/viviendas', [ViviendaController::class, 'index']);
+
+    
     /*
     |--------------------------------------------------------------------------
     | ANUNCIOS
@@ -67,6 +74,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/votaciones', [VotacionController::class, 'index']);
     Route::post('/votaciones', [VotacionController::class, 'store']);
     Route::post('/votaciones/votar', [VotacionController::class, 'votar']);
+    Route::post('/votaciones/delegar', [VotacionController::class, 'delegar']);
+    Route::post('/votaciones/ejecutar-delegado', [VotacionController::class, 'ejecutarDelegado']);
 
 
     /*

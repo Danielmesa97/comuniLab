@@ -210,7 +210,7 @@ onMounted(getData)
 }
 
 /* TARJETAS */
-..card {
+.card {
   background: white;
   border-radius: 20px;
   padding: 20px;

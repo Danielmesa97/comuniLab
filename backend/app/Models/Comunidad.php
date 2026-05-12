@@ -9,7 +9,8 @@ class Comunidad extends Model
     protected $table = 'comunidades';
     protected $fillable = [
     'nombre',
-    'descripcion'
+    'descripcion',
+    'activa',
 ];
 public function viviendas()
 {

@@ -21,32 +21,55 @@
       />
 
       <input
-        v-model="form.direccion"
+        v-model="form.descripcion"
         placeholder="Dirección"
       />
 
       <button @click="crearComunidad">
-        Crear comunidad
-      </button>
+
+  {{
+    editandoId
+      ? 'Guardar cambios'
+      : 'Crear comunidad'
+  }}
+
+</button>
 
     </div>
 
     <!-- LISTADO -->
-    <div class="grid">
+<div class="grid">
 
-      <div
-        v-for="c in comunidades"
-        :key="c.id"
-        class="card"
+  <div
+    v-for="c in comunidades"
+    :key="c.id"
+    class="card"
+  >
+
+    <h3>{{ c.nombre }}</h3>
+
+    <p>{{ c.descripcion }}</p>
+
+    <small>ID: {{ c.id }}</small>
+
+    <div class="actions">
+
+      <button @click="editarComunidad(c)">
+        ✏️ Editar
+      </button>
+
+      <button
+        class="danger"
+        @click="desactivarComunidad(c.id)"
       >
-        <h3>{{ c.nombre }}</h3>
-
-        <p>{{ c.direccion }}</p>
-
-        <small>ID: {{ c.id }}</small>
-      </div>
+        🔴 Desactivar
+      </button>
 
     </div>
+
+  </div>
+
+</div>
 
   </div>
 </template>
@@ -56,18 +79,31 @@ import { ref, onMounted } from 'vue'
 import { apiUrl } from '@/lib/api'
 
 const comunidades = ref([])
+const editarComunidad = (c) => {
+
+  form.value = {
+    nombre: c.nombre,
+    descripcion: c.descripcion
+  }
+
+  editandoId.value = c.id
+
+  showForm.value = true
+
+}
 
 const showForm = ref(false)
+const editandoId = ref(null)
 
 const form = ref({
   nombre: '',
-  direccion: ''
+  descripcion: ''
 })
 
 const token = localStorage.getItem('auth_token')
 
 
-// 📋 CARGAR
+// CARGAR
 const getComunidades = async () => {
 
   try {
@@ -86,21 +122,62 @@ const getComunidades = async () => {
     comunidades.value = data
 
   } catch (err) {
+
     console.error(err)
+
   }
 
 }
 
+    
+ const desactivarComunidad = async (id) => {
 
-// ➕ CREAR
+  const ok = confirm(
+    '¿Dar de baja esta comunidad?'
+  )
+
+  if (!ok) return
+
+  try {
+
+    await fetch(
+      apiUrl(`/api/superadmin/comunidades/${id}`),
+      {
+        method: 'DELETE',
+
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    )
+
+    getComunidades()
+
+  } catch (err) {
+
+    console.error(err)
+
+  }
+
+}
+
+// CREAR
 const crearComunidad = async () => {
 
   try {
 
+    const endpoint = editandoId.value
+      ? `/api/superadmin/comunidades/${editandoId.value}`
+      : '/api/superadmin/comunidades'
+
+    const method = editandoId.value
+      ? 'PUT'
+      : 'POST'
+
     const res = await fetch(
-      apiUrl('/api/superadmin/comunidades'),
+      apiUrl(endpoint),
       {
-        method: 'POST',
+        method,
 
         headers: {
           'Content-Type': 'application/json',
@@ -120,19 +197,21 @@ const crearComunidad = async () => {
 
     form.value = {
       nombre: '',
-      direccion: ''
+      descripcion: ''
     }
 
     showForm.value = false
+    editandoId.value = null
 
     getComunidades()
 
   } catch (err) {
+
     console.error(err)
+
   }
 
 }
-
 
 onMounted(() => {
   getComunidades()
@@ -294,6 +373,26 @@ onMounted(() => {
     width:100%;
   }
 
+}
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:15px;
+}
+
+.actions button{
+  flex:1;
+
+  border:none;
+  padding:10px;
+
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.danger{
+  background:#ef4444;
+  color:white;
 }
 
 </style>

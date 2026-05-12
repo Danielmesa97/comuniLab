@@ -106,15 +106,10 @@ Route::middleware([
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/comunidades', [
-        ComunidadAdminController::class,
-        'index'
-    ]);
-
-    Route::post('/comunidades', [
-        ComunidadAdminController::class,
-        'store'
-    ]);
+    Route::get('/comunidades', [ComunidadAdminController::class, 'index']);
+    Route::post('/comunidades', [ComunidadAdminController::class, 'store']);
+    Route::put('/comunidades/{id}', [ComunidadAdminController::class, 'update']);
+    Route::delete('/comunidades/{id}', [ComunidadAdminController::class, 'destroy']);
 
     /*
     |--------------------------------------------------------------------------

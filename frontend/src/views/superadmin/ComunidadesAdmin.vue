@@ -25,6 +25,7 @@
         placeholder="Dirección"
       />
 
+
       <button @click="crearComunidad">
 
   {{
@@ -54,6 +55,10 @@
 
     <div class="actions">
 
+     <button @click="verComunidad(c.id)">
+         Ver comunidad
+      </button>
+
       <button @click="editarComunidad(c)">
         ✏️ Editar
       </button>
@@ -77,7 +82,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { apiUrl } from '@/lib/api'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const comunidades = ref([])
 const editarComunidad = (c) => {
 
@@ -102,6 +109,13 @@ const form = ref({
 
 const token = localStorage.getItem('auth_token')
 
+const verComunidad = (id) => {
+
+  router.push(
+    `/superadmin/comunidades/${id}`
+  )
+
+}
 
 // CARGAR
 const getComunidades = async () => {

@@ -38,6 +38,11 @@ const routes = [
       path: 'comunidades',
       component: ComunidadesAdmin,
     },
+    {
+      path: 'comunidades/:id',
+      component: () =>
+        import('@/views/superadmin/ComunidadDetailAdmin.vue')
+    }
 
   ]
 

@@ -50,6 +50,49 @@ class ComunidadAdminController extends Controller
             'comunidad' => $comunidad
         ]);
     }
+        public function show($id)
+{
+    $comunidad = Comunidad::findOrFail($id);
+
+    return response()->json([
+
+        'comunidad' => $comunidad,
+
+        'stats' => [
+
+            'viviendas' =>
+                $comunidad->viviendas()->count(),
+
+            'usuarios' =>
+                \App\Models\User::whereHas(
+                    'vivienda',
+                    function($q) use ($id) {
+
+                        $q->where(
+                            'comunidad_id',
+                            $id
+                        );
+
+                    }
+                )->count(),
+
+            'incidencias' =>
+                \App\Models\Incidencia::where(
+                    'comunidad_id',
+                    $id
+                )->count(),
+
+            'votaciones' =>
+                \App\Models\Votacion::where(
+                    'comunidad_id',
+                    $id
+                )->count()
+
+        ]
+
+    ]);
+}
+
 
     // DESACTIVAR
     public function destroy($id)

@@ -1,7 +1,7 @@
 <template>
 
   <div id="app-container">
-
+    <SuperAdminCommunityBanner />
     <router-view />
 
     <!-- SOLO USUARIOS NORMALES -->
@@ -22,6 +22,8 @@
 
 import { useRoute } from 'vue-router'
 import BottomNav from '@/components/BottomNav.vue'
+import SuperAdminCommunityBanner
+  from '@/views/superadmin/SuperAdminCommunityBanner.vue'
 
 const route = useRoute()
 

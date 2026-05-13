@@ -110,7 +110,10 @@ Route::middleware([
     Route::post('/comunidades', [ComunidadAdminController::class, 'store']);
     Route::put('/comunidades/{id}', [ComunidadAdminController::class, 'update']);
     Route::delete('/comunidades/{id}', [ComunidadAdminController::class, 'destroy']);
-
+    Route::get(
+        '/comunidades/{id}',
+        [ComunidadAdminController::class, 'show']
+    );
     /*
     |--------------------------------------------------------------------------
     | VIVIENDAS

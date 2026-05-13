@@ -152,7 +152,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { apiUrl } from '@/lib/api'
+import {
+  apiUrl,
+  authHeaders
+} from '@/lib/api'
 const user = JSON.parse(localStorage.getItem('user'))
 const textoBusqueda = ref('')
 const votaciones = ref([])
@@ -169,17 +172,16 @@ const isVoted = (id) => {
 
 const getVotaciones = async () => {
   try {
-    const token = localStorage.getItem('auth_token')
+    const url =
+  `${apiUrl('/api/votaciones')}` +
+  `?buscar=${textoBusqueda.value}`
 
-    // Magia aquí: Añadimos el parámetro de búsqueda a tu URL
-    const url = `${apiUrl('/api/votaciones')}?buscar=${textoBusqueda.value}`
-
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`, // Enviamos el token para que Laravel sepa quiénes somos
-      },
-    })
+const response = await fetch(
+  url,
+  {
+    headers: authHeaders(),
+  }
+)
 
     const data = await response.json()
 
@@ -201,15 +203,12 @@ const abrirModal = (votacion) => {
 
 const enviarVoto = async (opcion) => {
   try {
-    const token = localStorage.getItem('auth_token')
+    const response = await fetch(
+  apiUrl('/api/votaciones/votar'),
+  {
+    method: 'POST',
 
-    const response = await fetch(apiUrl('/api/votaciones/votar'), {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+    headers: authHeaders(),
       body: JSON.stringify({
         votacion_id: votacionSeleccionada.value.id,
         opcion: opcion,
@@ -260,16 +259,13 @@ const abrirModalCrear = () => {
 
 const guardarNuevaVotacion = async () => {
   try {
-    const token = localStorage.getItem('auth_token')
-
     // Hacemos la petición POST a tu API de Laravel
-    const response = await fetch(apiUrl('/api/votaciones'), {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+const response = await fetch(
+  apiUrl('/api/votaciones'),
+  {
+    method: 'POST',
+
+    headers: authHeaders(),
       // Convertimos nuestro objeto reactivo a formato JSON
       body: JSON.stringify(nuevaVotacion.value),
     })
@@ -313,7 +309,7 @@ onMounted(getVotaciones)
 </script>
 
 <style scoped>
-/* ... (Tus estilos base) ... */
+/* ... ... */
 .dashboard-container {
   display: flex;
   flex-direction: column;

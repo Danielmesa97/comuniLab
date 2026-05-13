@@ -27,7 +27,22 @@ class VotacionController extends Controller
         // 2. Por defecto, una votación recién creada nace como 'activa'
         $validated['estado'] = 'activa';
 
-        $validated['comunidad_id'] = $request->user()->vivienda->comunidad_id;
+        if ($request->user()->role === 'superadmin') {
+
+            $comunidadId = $request->header(
+                'X-Comunidad-Id'
+        );
+
+        } else {
+
+            $comunidadId =
+                $request->user()
+                ->vivienda
+                ->comunidad_id;
+
+        }
+
+        $validated['comunidad_id'] = $comunidadId;
 
         // 3. Guardamos en la base de datos (Recuerda que ya añadimos fecha_limite al $fillable)
         $votacion = Votacion::create($validated);
@@ -41,8 +56,20 @@ class VotacionController extends Controller
 
     public function index(Request $request)
     {
-        // Pedimos a Laravel que cuente los votos totales y solo los "si"
-        $comunidadId = $request->user()->vivienda->comunidad_id;
+        if ($request->user()->role === 'superadmin') {
+
+            $comunidadId = $request->header(
+                'X-Comunidad-Id'
+            );
+
+        } else {
+
+            $comunidadId =
+                $request->user()
+                ->vivienda
+                ->comunidad_id;
+
+        }
 
         $query = Votacion::where(
                 'comunidad_id',

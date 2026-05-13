@@ -61,7 +61,10 @@
 </template>
 
 <script>
-import { apiUrl } from '@/lib/api'
+import {
+  apiUrl,
+  authHeaders
+} from '@/lib/api'
 
 export default {
   data() {
@@ -80,29 +83,28 @@ export default {
 
   methods: {
     async cargarIncidencias() {
-      const token = localStorage.getItem('auth_token')
-
-      const res = await fetch(apiUrl('/api/incidencias'), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      const res = await fetch(
+        apiUrl('/api/incidencias'),
+        {
+          headers: authHeaders(),
+        }
+      )
 
       const data = await res.json()
       this.incidencias = data
     },
 
     async crearIncidencia() {
-      const token = localStorage.getItem('auth_token')
-
-      const res = await fetch(apiUrl('/api/incidencias'), {
+      const res = await fetch(
+      apiUrl('/api/incidencias'),
+      {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+
+        headers: authHeaders(),
+
         body: JSON.stringify(this.form),
-      })
+      }
+    )
 
       const data = await res.json()
 
@@ -127,18 +129,18 @@ export default {
     },
 
     async cambiarEstado(i) {
-      const token = localStorage.getItem('auth_token')
-
-      const res = await fetch(apiUrl(`/api/incidencias/${i.id}`), {
+      const res = await fetch(
+      apiUrl(`/api/incidencias/${i.id}`),
+      {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+
+        headers: authHeaders(),
+
         body: JSON.stringify({
           estado: i.estado,
         }),
-      })
+      }
+    )
 
       if (!res.ok) {
         alert('Error actualizando estado')

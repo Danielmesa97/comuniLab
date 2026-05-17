@@ -45,30 +45,34 @@ const isSuperAdmin = user?.role === 'superadmin'
 <style>
 /* CSS GLOBAL PARA TODA LA APLICACIÓN */
 .bottom-nav {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
 
-    height: 60px;
-    width: 100%;
+    display:flex;
+    align-items:center;
 
-    position: fixed;   /* 🔥 CAMBIO CLAVE */
-    bottom: 0;
-    left: 0;
+    overflow-x:auto;
+    overflow-y:hidden;
 
-    border-top: 2px solid #e5e5e5;
-    background: white;
+    white-space:nowrap;
+    -webkit-overflow-scrolling:touch;
 
-    z-index: 1000;     /* 🔥 para que esté encima */
+}
+.bottom-nav::-webkit-scrollbar{
+  display:none;
 }
 
 .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    color: #8e8e8e;
-    flex: 1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    text-decoration:none;
+    color:#8e8e8e;
+
+    min-width:80px;
+    flex-shrink:0;
+
+    padding:0 10px;
 }
 
 .icon {

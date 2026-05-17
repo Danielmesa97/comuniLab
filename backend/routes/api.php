@@ -68,6 +68,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/votaciones', [VotacionController::class, 'store']);
     Route::post('/votaciones/votar', [VotacionController::class, 'votar']);
 
+     /*
+    |--------------------------------------------------------------------------
+    | Vivienda
+    |--------------------------------------------------------------------------
+    */
+
+
+    Route::post('/viviendas', [ViviendaController::class, 'store']);
+    Route::put('/viviendas/{id}', [ViviendaController::class, 'update']);
+    Route::delete('/viviendas/{id}', [ViviendaController::class, 'destroy']);
 
     /*
     |--------------------------------------------------------------------------

@@ -7,7 +7,7 @@
         <p>Tu comunidad está al día</p>
       </div>
 
-      <!-- 🔥 ACCIONES DERECHA -->
+      <!--  ACCIONES DERECHA -->
       <div class="header-actions">
         <button class="icon-btn">🔔</button>
 
@@ -17,7 +17,7 @@
 
     <!-- CONTENIDO -->
     <main class="main-container">
-      <!-- 📢 ANUNCIOS -->
+      <!-- ANUNCIOS -->
       <section class="card">
         <h2>📢 Últimos anuncios</h2>
 
@@ -30,10 +30,19 @@
           <p>{{ a.descripcion }}</p>
         </div>
 
-        <router-link to="/anuncios" class="ver-mas"> Ver todos → </router-link>
+        <router-link
+          :to="
+            isModoComunidad
+              ? '/superadmin/comunidad/anuncios'
+              : '/anuncios'
+          "
+          class="ver-mas"
+        >
+          Ver todos →
+      </router-link>
       </section>
 
-      <!-- ⚠️ INCIDENCIAS -->
+      <!--  INCIDENCIAS -->
       <section class="card">
         <h2>⚠️ Últimas incidencias</h2>
 
@@ -46,10 +55,19 @@
           <p>{{ i.descripcion }}</p>
         </div>
 
-        <router-link to="/incidencias" class="ver-mas"> Ver todas → </router-link>
+        <router-link
+          :to="
+            isModoComunidad
+              ? '/superadmin/comunidad/incidencias'
+              : '/incidencias'
+          "
+          class="ver-mas"
+        >
+        Ver todos →
+      </router-link>
       </section>
 
-      <!-- 🗳️ VOTACIONES -->
+      <!-- VOTACIONES -->
       <section class="card">
         <h2>🗳️ Votaciones activas</h2>
 
@@ -61,7 +79,16 @@
           <strong>{{ v.titulo || v.nombre }}</strong>
         </div>
 
-        <router-link to="/votaciones" class="ver-mas"> Ver todas → </router-link>
+        <router-link
+          :to="
+            isModoComunidad
+              ? '/superadmin/comunidad/votaciones'
+              : '/votaciones'
+          "
+          class="ver-mas"
+        >
+        Ver todos →
+      </router-link>
       </section>
     </main>
   </div>
@@ -73,6 +100,11 @@ import { useRouter } from 'vue-router'
 import { apiUrl } from '@/lib/api'
 
 const router = useRouter()
+//asegurar la vista cuando es superadmin
+const isModoComunidad =
+  !!localStorage.getItem(
+    'superadmin_comunidad_id'
+  )
 
 const logout = () => {
   const confirmar = confirm('¿Seguro que quieres cerrar sesión?')

@@ -7,15 +7,16 @@ import VotacionesView from '../views/VotacionesView.vue'
 import SolicitudView from '@/views/SolicitudView.vue'
 import SolicitudesAdminView from '@/views/SolicitudesAdminView.vue'
 import AnunciosView from '@/views/AnunciosView.vue'
-
+import ViviendasView from '@/views/ViviendasView.vue'
 
 import SuperAdminDashboard from '../views/superadmin/SuperAdminDashboard.vue'
 import ComunidadesAdmin from '../views/superadmin/ComunidadesAdmin.vue'
 import SuperAdminLayout from '../views/superadmin/SuperAdminLayout.vue'
+import SuperAdminCommunityLayout from '@/views/superadmin/SuperAdminCommunityLayout.vue'
 
 const routes = [
   { path: '/', name: 'login', component: LoginView },
-
+  { path: '/viviendas', component: ViviendasView },
   { path: '/dashboard', component: DashboardView },
   { path: '/incidencias', component: Incidencias },
   { path: '/comunidades', component: Comunidades },
@@ -47,6 +48,29 @@ const routes = [
   ]
 
 },
+{
+  path: '/superadmin/comunidad',
+  component: SuperAdminCommunityLayout,
+
+  children: [
+    {
+      path: 'dashboard',
+      component: DashboardView,
+    },
+    {
+      path: 'anuncios',
+      component: AnunciosView,
+    },
+    {
+      path: 'incidencias',
+      component: Incidencias,
+    },
+    {
+      path: 'votaciones',
+      component: VotacionesView,
+    },
+  ],
+},
 
   // SOLO ADMIN
   { path: '/solicitudes-admin', component: SolicitudesAdminView },
@@ -61,6 +85,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes
 })
+
 
 /* 🔐 PROTECCIÓN GLOBAL */
 router.beforeEach((to, from, next) => {

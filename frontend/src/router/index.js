@@ -7,6 +7,7 @@ import VotacionesView from '../views/VotacionesView.vue'
 import SolicitudView from '@/views/SolicitudView.vue'
 import SolicitudesAdminView from '@/views/SolicitudesAdminView.vue'
 import AnunciosView from '@/views/AnunciosView.vue'
+import ReservaInstalaciones from '../views/ReservaInstalaciones.vue'
 
 
 import SuperAdminDashboard from '../views/superadmin/SuperAdminDashboard.vue'
@@ -22,7 +23,9 @@ const routes = [
   { path: '/votaciones', component: VotacionesView },
   { path: '/solicitud', component: SolicitudView },
   { path: '/anuncios', component: AnunciosView },
-  
+  { path: '/instalaciones',component: ReservaInstalaciones},
+
+
   {
   path: '/superadmin',
   component: SuperAdminLayout,

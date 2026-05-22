@@ -71,6 +71,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | INSTALACIONES
+    |--------------------------------------------------------------------------
+    */
+
+    
+    Route::get('/instalaciones', [InstalacionController::class, 'index']);
+    Route::get('/instalaciones/{id}/reservas', [InstalacionController::class, 'getReservas']);
+    Route::post('/reservas', [InstalacionController::class, 'storeReserva']);
+
+
+    /*
+    |--------------------------------------------------------------------------
     | SOLICITUDES
     |--------------------------------------------------------------------------
     */

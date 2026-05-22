@@ -66,11 +66,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { apiUrl } from '@/lib/api'
 
 const route = useRoute()
-
+const router = useRouter()
 const token = localStorage.getItem('auth_token')
 
 const comunidad = ref({})
@@ -109,19 +109,21 @@ const getComunidad = async () => {
 
 }
 
-const entrarComoAdmin = () => {
+const entrarComoAdmin = async () => {
 
   localStorage.setItem(
-  'superadmin_comunidad_id',
-  comunidad.value.id
-)
+    'superadmin_comunidad_id',
+    comunidad.value.id
+  )
 
-localStorage.setItem(
-  'superadmin_comunidad_nombre',
-  comunidad.value.nombre
-)
+  localStorage.setItem(
+    'superadmin_comunidad_nombre',
+    comunidad.value.nombre
+  )
 
-  window.location.href = '/dashboard'
+  await router.push({
+    path: '/superadmin/comunidad/dashboard'
+  })
 
 }
 

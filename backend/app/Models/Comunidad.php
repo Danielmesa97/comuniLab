@@ -16,5 +16,12 @@ public function viviendas()
 {
     return $this->hasMany(Vivienda::class);
 }
+
+public function users()
+{
+    return $this->belongsToMany(
+        User::class
+    )->withPivot('role');
+}
 }
 

@@ -78,6 +78,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/viviendas', [ViviendaController::class, 'store']);
     Route::put('/viviendas/{id}', [ViviendaController::class, 'update']);
     Route::delete('/viviendas/{id}', [ViviendaController::class, 'destroy']);
+    Route::get('/viviendas', [ViviendaController::class, 'index']);
+
 
     /*
     |--------------------------------------------------------------------------

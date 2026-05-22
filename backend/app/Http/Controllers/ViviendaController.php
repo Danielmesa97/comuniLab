@@ -10,7 +10,7 @@ class ViviendaController extends Controller
     // LISTADO
     public function index(Request $request)
     {
-        $query = Vivienda::query();
+        $query = Vivienda::with('users');
 
         // FILTRO POR COMUNIDAD
         if ($request->has('comunidad_id')) {
@@ -40,7 +40,9 @@ class ViviendaController extends Controller
 
         // comunidad automática
         $data['comunidad_id'] =
-            $user->vivienda->comunidad_id;
+            $user->comunidades
+                ->first()
+                ->id;
 
         $vivienda = Vivienda::create($data);
 
@@ -57,7 +59,9 @@ class ViviendaController extends Controller
 
         $vivienda = Vivienda::where(
             'comunidad_id',
-            $user->vivienda->comunidad_id
+            $user->comunidades
+                ->first()
+                ->id
         )->findOrFail($id);
 
         $data = $request->validate([
@@ -76,7 +80,9 @@ class ViviendaController extends Controller
 
         $vivienda = Vivienda::where(
             'comunidad_id',
-            $user->vivienda->comunidad_id
+            $user->comunidades
+                ->first()
+                ->id
         )->findOrFail($id);
 
         $vivienda->delete();

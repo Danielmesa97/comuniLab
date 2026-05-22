@@ -51,7 +51,11 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => '¡Hola de nuevo!',
-            'user' => $user,
+
+            'user' => $user->load([
+                'comunidades'
+            ]),
+
             'token' => $token
         ]);
     }

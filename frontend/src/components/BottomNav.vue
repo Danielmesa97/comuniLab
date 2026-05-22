@@ -35,11 +35,14 @@
     </router-link>
 
     <router-link
+      v-if="
+        user.role === 'admin' ||
+        user.role === 'presidente'
+      "
       to="/viviendas"
       class="nav-item"
     >
-      <span class="icon">🏢</span>
-      <span>Viviendas</span>
+      🏢 Viviendas
     </router-link>
 
     <router-link 

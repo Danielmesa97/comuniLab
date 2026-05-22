@@ -116,11 +116,14 @@ const getViviendas = async () => {
   try {
 
     const user = JSON.parse(
-      localStorage.getItem('user')
+      localStorage.getItem('user') || '{}'
     )
 
     const comunidadId =
-      user?.vivienda?.comunidad_id
+      Object.values(user.comunidades || {})[0]?.id
+
+    console.log(user)
+    console.log(comunidadId)
 
     const res = await fetch(
       apiUrl(

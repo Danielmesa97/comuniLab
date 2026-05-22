@@ -45,17 +45,27 @@ const isSuperAdmin = user?.role === 'superadmin'
 <style>
 /* CSS GLOBAL PARA TODA LA APLICACIÓN */
 .bottom-nav {
-
     display:flex;
+    justify-content:space-around;
     align-items:center;
+
+    height:60px;
+    width:100%;
+
+    position:fixed;
+    bottom:0;
+    left:0;
+
+    border-top:2px solid #e5e5e5;
+    background:white;
+
+    z-index:1000;
 
     overflow-x:auto;
     overflow-y:hidden;
-
     white-space:nowrap;
-    -webkit-overflow-scrolling:touch;
-
 }
+
 .bottom-nav::-webkit-scrollbar{
   display:none;
 }
@@ -84,7 +94,9 @@ const isSuperAdmin = user?.role === 'superadmin'
     font-size: 12px;
     font-weight: 500;
 }
-.dashboard-container {
-  padding-bottom: 80px;
+#app-container{
+  min-height:100vh;
+  padding-bottom:80px;
+  box-sizing:border-box;
 }
 </style>

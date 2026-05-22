@@ -94,20 +94,19 @@
 import { ref, computed, onMounted } from 'vue'
 import { apiUrl } from '@/lib/api'
 
-// Sacamos el usuario logueado para saber su comunidad en el futuro backend
 const user = JSON.parse(localStorage.getItem('user') || '{}')
 const token = localStorage.getItem('auth_token')
 
-// Estados reactivos
+// Estados reactivos (Ahora empiezan vacíos para llenarse con el backend)
 const instalaciones = ref([])
+const reservasExistentes = ref([])
 const mostrarModal = ref(false)
 const instalacionSeleccionada = ref(null)
-const reservaTemporal = ref(null) // Almacena la celda (fecha + franja) seleccionada antes de confirmar
+const reservaTemporal = ref(null)
 
-// Control de fecha mínima (Hoy) para que no reserven en el pasado (por si se usa en otros inputs)
 const fechaMinima = ref(new Date().toISOString().split('T')[0])
 
-// Definimos las franjas fijas de la izquierda basadas en tu imagen de clase
+// Las franjas se mantienen fijas en el front porque es vuestro horario comercial
 const franjasHorarias = ref([
   { id: 1, inicio: '09:00', fin: '10:30' },
   { id: 2, inicio: '10:30', fin: '12:00' },
@@ -117,17 +116,10 @@ const franjasHorarias = ref([
   { id: 6, inicio: '20:00', fin: '21:30' }
 ])
 
-// Datos de prueba simulados: indica qué combinaciones de fecha y franja están cogidas en la base de datos
-const reservasExistentes = ref([
-  { fecha: new Date().toISOString().split('T')[0], franja_id: 1 }, // Hoy, primera franja ocupada
-  { fecha: new Date(Date.now() + 86400000).toISOString().split('T')[0], franja_id: 2 } // Mañana, segunda franja ocupada
-])
-
 const semanaOffset = ref(0)
 const avanzarSemana = () => { if (semanaOffset.value < 1) semanaOffset.value = 1 }
 const retrocederSemana = () => { if (semanaOffset.value > 0) semanaOffset.value = 0 }
 
-// Genera un array automáticamente con los próximos 7 días desde hoy para la cabecera del calendario
 const diasSemana = computed(() => {
   const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
   const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -142,58 +134,34 @@ const diasSemana = computed(() => {
     lista.push({
       nombre: nombresDias[d.getDay()],
       fechaCorto: `${d.getDate()} ${meses[d.getMonth()]}`,
-      fecha: d.toISOString().split('T')[0] // Formato YYYY-MM-DD para comparar con el backend
+      fecha: d.toISOString().split('T')[0]
     })
   }
   return lista
 })
 
-// Función para simular la carga de instalaciones de la comunidad
+// 1. CARGAR INSTALACIONES REALES
 const getInstalaciones = async () => {
   try {
-    // Cuando hagas el backend, cambiarás esto por tu fetch real:
-    // const res = await fetch(apiUrl('/api/instalaciones'), { headers: { Authorization: `Bearer ${token}` } })
-    // instalaciones.value = await res.json()
-
-    // Datos hardcodeados provisionales con la estética que buscas
-    instalaciones.value = [
-      { 
-        id: 1, 
-        nombre: 'Pista de Pádel', 
-        descripcion: 'Pista de cristal con iluminación LED de última generación. Perfecta para partidos de dobles.',
-        duracion_franja: 90,
-        aforo_max: 4,
-        icono: '🏓'
-      },
-      { 
-        id: 2, 
-        nombre: 'Piscina Comunitaria', 
-        descripcion: 'Zona de baño y solárium. Recuerda respetar las normas de convivencia y el aforo.',
-        duracion_franja: 120,
-        aforo_max: 20,
-        icono: '🏊'
-      },
-      { 
-        id: 3, 
-        nombre: 'Sala Social / Club', 
-        descripcion: 'Espacio cerrado climatizado para reuniones, eventos privados o cumpleaños de los vecinos.',
-        duracion_franja: 240,
-        aforo_max: 30,
-        icono: '🎉'
-      }
-    ]
+    const res = await fetch(apiUrl('/api/instalaciones'), {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    
+    if (res.ok) {
+      instalaciones.value = await res.json()
+    } else {
+      console.error('Error al obtener instalaciones de la base de datos')
+    }
   } catch (error) {
-    console.error('Error cargando instalaciones:', error)
+    console.error('Error de red cargando instalaciones:', error)
   }
 }
 
-// Averigua si la intersección fecha-hora está libre u ocupada recorriendo el mock array
 const obtenerEstadoCelda = (fecha, franjaId) => {
   const ocupado = reservasExistentes.value.some(r => r.fecha === fecha && r.franja_id === franjaId)
   return ocupado ? 'ocupado' : 'libre'
 }
 
-// Al hacer clic en una celda de la rejilla
 const seleccionarCelda = (fecha, franja) => {
   if (obtenerEstadoCelda(fecha, franja.id) === 'ocupado') {
     alert('Esta franja ya está reservada por otro propietario.')
@@ -202,35 +170,71 @@ const seleccionarCelda = (fecha, franja) => {
   reservaTemporal.value = { fecha, franja }
 }
 
-// Controladores del Modal
-const abrirModalReserva = (instalacion) => {
+// 2. ABRIR MODAL Y CARGAR RESERVAS REALES DE ESA PISTA
+const abrirModalReserva = async (instalacion) => {
   instalacionSeleccionada.value = instalacion
-  reservaTemporal.value = null // Reseteamos cualquier selección anterior
+  reservaTemporal.value = null
   semanaOffset.value = 0
   mostrarModal.value = true
+
+  // Llamada al backend para traer las reservas de la instalación seleccionada
+  try {
+    const res = await fetch(apiUrl(`/api/instalaciones/${instalacion.id}/reservas`), {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (res.ok) {
+      reservasExistentes.value = await res.json()
+    }
+  } catch (error) {
+    console.error('Error al cargar las reservas:', error)
+  }
 }
 
 const cerrarModal = () => {
   mostrarModal.value = false
   instalacionSeleccionada.value = null
   reservaTemporal.value = null
+  reservasExistentes.value = [] // Limpiamos la memoria
 }
 
-const confirmarReserva = () => {
+// 3. GUARDAR RESERVA REAL EN LA BASE DE DATOS
+const confirmarReserva = async () => {
   if (!reservaTemporal.value) return
 
-  alert(`¡Reserva realizada con éxito!\nInstalación: ${instalacionSeleccionada.value.nombre}\nFecha: ${ordenarFecha(reservaTemporal.value.fecha)}\nHora: ${reservaTemporal.value.franja.inicio} - ${reservaTemporal.value.franja.fin}`)
-  
-  // Añadimos la reserva al listado local simulado para que se pinte en ROJO de inmediato
-  reservasExistentes.value.push({
-    fecha: reservaTemporal.value.fecha,
-    franja_id: reservaTemporal.value.franja.id
-  })
+  try {
+    const res = await fetch(apiUrl('/api/reservas'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        instalacion_id: instalacionSeleccionada.value.id,
+        fecha: reservaTemporal.value.fecha,
+        franja_id: reservaTemporal.value.franja.id
+      })
+    })
 
-  cerrarModal()
+    if (res.ok) {
+      alert(`¡Reserva realizada con éxito!\nInstalación: ${instalacionSeleccionada.value.nombre}\nFecha: ${ordenarFecha(reservaTemporal.value.fecha)}\nHora: ${reservaTemporal.value.franja.inicio} - ${reservaTemporal.value.franja.fin}`)
+      
+      // Lo añadimos localmente para que se pinte en rojo al instante sin recargar la página
+      reservasExistentes.value.push({
+        fecha: reservaTemporal.value.fecha,
+        franja_id: reservaTemporal.value.franja.id
+      })
+      
+      cerrarModal()
+    } else {
+      const errorData = await res.json()
+      alert(errorData.message || 'Error al confirmar la reserva. Puede que ya esté ocupada.')
+    }
+  } catch (error) {
+    console.error('Error conectando con el servidor:', error)
+    alert('Error de conexión al procesar la reserva.')
+  }
 }
 
-// Helper rápido para formatear fechas de YYYY-MM-DD a DD/MM/YYYY en el texto de confirmación
 const ordenarFecha = (f) => f.split('-').reverse().join('/')
 
 onMounted(() => {

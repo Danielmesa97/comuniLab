@@ -9,6 +9,7 @@ use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\IncidenciaController;
 use App\Http\Controllers\AnuncioController;
 use App\Http\Controllers\VotacionController;
+use App\Http\Controllers\InstalacionController;
 use App\Http\Controllers\SuperAdmin\ComunidadAdminController;
 
 /*

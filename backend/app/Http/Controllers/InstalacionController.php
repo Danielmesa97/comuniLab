@@ -10,14 +10,30 @@ use Illuminate\Support\Facades\Auth;
 class InstalacionController extends Controller
 {
     // 1. Listar todas las instalaciones de la comunidad del usuario autenticado
-    public function index()
+    public function index(Request $request)
     {
-        $user = Auth::user();
-        
-        // Buscamos solo las instalaciones que pertenezcan a la comunidad del vecino
-        $instalaciones = Instalacion::where('comunidad_id', $user->comunidad_id)->get();
-        
-        return response()->json($instalaciones, 200);
+        try {
+            // 🔥 SUPERADMIN ENTRANDO A COMUNIDAD
+            if ($request->user()->role === 'superadmin') {
+                $comunidadId = $request->header('X-Comunidad-Id');
+            } 
+            // 🔹 USUARIO NORMAL
+            else {
+                $comunidadId = $request->user()->vivienda->comunidad_id;
+            }
+
+            $instalaciones = \App\Models\Instalacion::where('comunidad_id', $comunidadId)->get();
+            
+            return response()->json($instalaciones, 200);
+
+        } catch (\Exception $e) {
+            // 🚨 SI ALGO EXPLOTA, DEVOLVEMOS EL ERROR REAL A VUE PARA LEERLO
+            return response()->json([
+                'error_real' => $e->getMessage(),
+                'linea_del_error' => $e->getLine(),
+                'archivo_del_error' => $e->getFile()
+            ], 500);
+        }
     }
 
     // 2. Obtener las reservas de una instalación específica para pintarlas en el calendario

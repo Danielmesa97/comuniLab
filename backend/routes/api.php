@@ -9,6 +9,7 @@ use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\IncidenciaController;
 use App\Http\Controllers\AnuncioController;
 use App\Http\Controllers\VotacionController;
+use App\Http\Controllers\InstalacionController;
 use App\Http\Controllers\SuperAdmin\ComunidadAdminController;
 
 /*
@@ -79,6 +80,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/viviendas/{id}', [ViviendaController::class, 'update']);
     Route::delete('/viviendas/{id}', [ViviendaController::class, 'destroy']);
     Route::get('/viviendas', [ViviendaController::class, 'index']);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INSTALACIONES
+    |--------------------------------------------------------------------------
+    */
+
+    
+    Route::get('/instalaciones', [InstalacionController::class, 'index']);
+    Route::get('/instalaciones/{id}/reservas', [InstalacionController::class, 'getReservas']);
+    Route::post('/reservas', [InstalacionController::class, 'storeReserva']);
 
 
     /*

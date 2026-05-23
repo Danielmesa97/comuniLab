@@ -396,13 +396,15 @@ const iniciarDelegacion = async (votacion) => {
   
   try {
     const response = await fetch(apiUrl('/api/viviendas'), {
-      headers: authHeaders() // <-- También actualicé esto por si acaso para mantener todo limpio
+      headers: authHeaders() 
     })
 
     if (response.ok) {
       const data = await response.json()
-      // Excluir tu propio piso
-      viviendasDisponibles.value = data.viviendas.filter(v => v.id !== user?.vivienda_id)
+      
+      // Usamos 'data' directamente porque en la rama dev Laravel devuelve el array limpio
+      viviendasDisponibles.value = data.filter(v => v.id !== user?.vivienda_id)
+      
       mostrarModalDelegar.value = true
     } else {
       alert('Error al cargar la lista de vecinos.')

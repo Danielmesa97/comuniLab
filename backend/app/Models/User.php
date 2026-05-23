@@ -24,7 +24,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'vivienda_id'
+        'vivienda_id',
+         'activo'
     ];
 
     /**
@@ -68,5 +69,7 @@ public function comunidades()
         'comunidad_user'
     )->withPivot('role');
 }
+
+
 
 }

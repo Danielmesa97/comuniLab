@@ -10,6 +10,7 @@ use App\Http\Controllers\IncidenciaController;
 use App\Http\Controllers\AnuncioController;
 use App\Http\Controllers\VotacionController;
 use App\Http\Controllers\SuperAdmin\ComunidadAdminController;
+use App\Http\Controllers\SuperAdmin\SuperAdminUserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -139,10 +140,38 @@ Route::middleware([
     });
 
     /*
+|--------------------------------------------------------------------------
+| USUARIOS
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/usuarios',
+    [SuperAdminUserController::class, 'index']
+);
+
+Route::post(
+    '/usuarios',
+    [SuperAdminUserController::class, 'store']
+);
+
+Route::put(
+    '/usuarios/{id}/toggle-activo',
+    [SuperAdminUserController::class, 'toggleActivo']
+);
+
+    /*
     |--------------------------------------------------------------------------
     | USUARIOS
     |--------------------------------------------------------------------------
     */
+    Route::middleware([
+        'auth:sanctum',
+        'superadmin'
+    ])
+    ->prefix('superadmin')
+    ->group(function () {
+
 
     Route::get('/usuarios', function () {
         return response()->json([

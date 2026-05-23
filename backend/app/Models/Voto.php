@@ -7,16 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Voto extends Model
 {
     protected $fillable = [
-        'votacion_id',
-        'vivienda_id',
-        'user_id',
-        'opcion'
-    ];
+    'user_id',
+    'votacion_id',
+    'vivienda_id',
+    'vivienda_delegada_id',
+    'opcion',
+];
 
     public function vivienda()
-    {
-        return $this->belongsTo(Vivienda::class);
-    }
+{
+    // Relación con el dueño original del voto
+    return $this->belongsTo(Vivienda::class, 'vivienda_id');
+}
 
     public function votacion()
     {

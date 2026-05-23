@@ -9,11 +9,19 @@ class Comunidad extends Model
     protected $table = 'comunidades';
     protected $fillable = [
     'nombre',
-    'descripcion'
+    'descripcion',
+    'activa',
 ];
 public function viviendas()
 {
     return $this->hasMany(Vivienda::class);
+}
+
+public function users()
+{
+    return $this->belongsToMany(
+        User::class
+    )->withPivot('role');
 }
 }
 

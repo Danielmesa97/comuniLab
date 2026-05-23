@@ -21,7 +21,7 @@ class ComunidadAdminController extends Controller
     {
         $data = $request->validate([
             'nombre' => 'required|string|max:255',
-            'direccion' => 'required|string|max:255'
+            'descripcion' => 'required|string|max:255'
         ]);
 
         $comunidad = Comunidad::create($data);

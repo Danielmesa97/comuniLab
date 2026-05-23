@@ -10,7 +10,26 @@ class AnuncioController extends Controller
     // 📢 LISTAR ANUNCIOS
     public function index(Request $request)
     {
-        $comunidadId = $request->user()->vivienda->comunidad_id;
+        // SUPERADMIN ENTRANDO A COMUNIDAD
+
+    if ($request->user()->role === 'superadmin') {
+
+        $comunidadId = $request->header(
+        'X-Comunidad-Id'
+        );
+
+    }
+
+    // USUARIO NORMAL
+
+    else {
+
+        $comunidadId =
+            $request->user()
+            ->vivienda
+            ->comunidad_id;
+
+    }
 
         $query = Anuncio::where(
             'comunidad_id',
@@ -60,7 +79,22 @@ class AnuncioController extends Controller
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio'
         ]);
 
-        $data['comunidad_id'] = $request->user()->vivienda->comunidad_id;
+        if ($request->user()->role === 'superadmin') {
+
+            $comunidadId = $request->header(
+                'X-Comunidad-Id'
+            );
+
+        } else {
+
+            $comunidadId =
+                $request->user()
+                ->vivienda
+                ->comunidad_id;
+
+        }
+
+        $data['comunidad_id'] = $comunidadId;
 
         $anuncio = Anuncio::create($data);
 

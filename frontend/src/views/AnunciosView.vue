@@ -73,7 +73,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { apiUrl } from '@/lib/api'
+import {
+  apiUrl,
+  authHeaders
+} from '@/lib/api'
 
 const anuncios = ref([])
 const mostrarModal = ref(false)
@@ -129,20 +132,22 @@ const anunciosOrdenados = computed(() => {
 ====================================== */
 const getAnuncios = async () => {
   try {
-    const token = localStorage.getItem('auth_token')
-
     let url = apiUrl('/api/anuncios')
 
-    if (filtroDesde.value && filtroHasta.value) {
-      url += `?desde=${filtroDesde.value}&hasta=${filtroHasta.value}`
-    }
+if (
+  filtroDesde.value &&
+  filtroHasta.value
+) {
 
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    })
+  url +=
+    `?desde=${filtroDesde.value}` +
+    `&hasta=${filtroHasta.value}`
+
+}
+
+const res = await fetch(url, {
+  headers: authHeaders(),
+})
 
     const data = await res.json()
     anuncios.value = data
@@ -156,16 +161,16 @@ const getAnuncios = async () => {
 ====================================== */
 const crearAnuncio = async () => {
   try {
-    const token = localStorage.getItem('auth_token')
+    const res = await fetch(
+  apiUrl('/api/anuncios'),
+  {
+    method: 'POST',
 
-    const res = await fetch(apiUrl('/api/anuncios'), {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.value),
-    })
+    headers: authHeaders(),
+
+    body: JSON.stringify(form.value),
+  }
+)
 
     if (!res.ok) {
       alert('Error creando anuncio')

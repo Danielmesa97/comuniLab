@@ -16,7 +16,7 @@ class VotacionController extends Controller
             return response()->json([
                 'error' => 'No autorizado'
             ], 403);
-    }
+        }
         // 1. Validamos los datos que nos envía Vue
         $validated = $request->validate([
             'titulo' => 'required|string|max:255',
@@ -27,9 +27,15 @@ class VotacionController extends Controller
         // 2. Por defecto, una votación recién creada nace como 'activa'
         $validated['estado'] = 'activa';
 
-        $validated['comunidad_id'] = $request->user()->vivienda->comunidad_id;
+        if ($request->user()->role === 'superadmin') {
+            $comunidadId = $request->header('X-Comunidad-Id');
+        } else {
+            $comunidadId = $request->user()->vivienda->comunidad_id;
+        }
 
-        // 3. Guardamos en la base de datos (Recuerda que ya añadimos fecha_limite al $fillable)
+        $validated['comunidad_id'] = $comunidadId;
+
+        // 3. Guardamos en la base de datos 
         $votacion = Votacion::create($validated);
 
         // 4. Devolvemos la respuesta al frontend con código 201 (Created)
@@ -42,12 +48,20 @@ class VotacionController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $viviendaId = $user->vivienda_id;
-        $comunidadId = $user->vivienda->comunidad_id;
+        
+        // Mantenemos tu variable necesaria para las delegaciones
+        $viviendaId = $user->vivienda_id; 
 
-        // --- 1. CONSULTA DE VOTACIONES (Tu lógica original) ---
+        // Mantenemos la lógica de dev para el SuperAdmin
+        if ($user->role === 'superadmin') {
+            $comunidadId = $request->header('X-Comunidad-Id');
+        } else {
+            $comunidadId = $user->vivienda->comunidad_id;
+        }
+
+        // --- 1. CONSULTA DE VOTACIONES ---
         $query = Votacion::where('comunidad_id', $comunidadId)
-            ->with(['votos.vivienda']) // <-- AÑADIMOS ESTO para traer el detalle de los votos y el nombre del piso
+            ->with(['votos.vivienda']) 
             ->withCount('votos')
             ->withCount(['votos as votos_si_count' => function ($q) {
                 $q->where('opcion', 'si'); 
@@ -75,11 +89,9 @@ class VotacionController extends Controller
             ->pluck('votacion_id');
 
         // --- 3. NUEVO: DELEGACIONES QUE HAS RECIBIDO ---
-        // Buscamos en la tabla votos aquellos donde tú eres el delegado
-        // y la opción aún es NULL (porque no has votado por ellos todavía)
         $delegaciones_pendientes = Voto::where('vivienda_delegada_id', $viviendaId)
             ->whereNull('opcion')
-            ->with('vivienda') // Cargamos la relación para que Vue sepa QUÉ PISO nos delegó
+            ->with('vivienda') 
             ->get();
 
         return response()->json([
@@ -89,13 +101,12 @@ class VotacionController extends Controller
         ], 200);
     }
 
-    
     public function votar(Request $request)
     {
-        // 1. Validamos los datos de entrada (Añadida la opción)
+        // 1. Validamos los datos de entrada
         $request->validate([
             'votacion_id' => 'required|exists:votaciones,id',
-            'opcion'      => 'required|in:si,no' // Aseguramos que el voto sea estrictamente "si" o "no"
+            'opcion'      => 'required|in:si,no' 
         ]);
 
         // 2. Buscamos la votación en la base de datos
@@ -131,8 +142,9 @@ class VotacionController extends Controller
         return response()->json([
             'message' => '¡Voto registrado correctamente!',
             'voto'    => $voto
-        ], 201); // El código 201 significa "Creado exitosamente"
+        ], 201); 
     }
+    
     public function delegar(Request $request)
     {
         $request->validate([
@@ -154,10 +166,10 @@ class VotacionController extends Controller
         // 2. Creamos el registro de delegación
         Voto::create([
             'votacion_id' => $request->votacion_id,
-            'vivienda_id' => $user->vivienda_id, // El dueño del voto
+            'vivienda_id' => $user->vivienda_id, 
             'user_id' => $user->id,
-            'vivienda_delegada_id' => $request->vivienda_delegada_id, // El representante
-            'opcion' => null, // Queda vacío hasta que el representante vote
+            'vivienda_delegada_id' => $request->vivienda_delegada_id, 
+            'opcion' => null, 
         ]);
 
         return response()->json(['message' => 'Voto delegado correctamente'], 201);
@@ -165,7 +177,7 @@ class VotacionController extends Controller
 
     public function ejecutarDelegado(Request $request)
     {
-        // 1. Validamos los datos (Fíjate que ahora pedimos el 'voto_id')
+        // 1. Validamos los datos
         $request->validate([
             'votacion_id' => 'required|exists:votaciones,id',
             'voto_id'     => 'required|exists:votos,id',
@@ -174,10 +186,7 @@ class VotacionController extends Controller
 
         $user = $request->user();
 
-        // 2. Buscamos ese voto con un triple candado de seguridad:
-        // - Que pertenezca a la votación correcta
-        // - Que tu vivienda sea exactamente la delegada
-        // - Que la opción siga en 'null' (que no se haya votado ya)
+        // 2. Buscamos ese voto con un triple candado de seguridad
         $votoDelegado = Voto::where('id', $request->voto_id)
                             ->where('votacion_id', $request->votacion_id)
                             ->where('vivienda_delegada_id', $user->vivienda_id)
@@ -195,7 +204,7 @@ class VotacionController extends Controller
             ], 400);
         }
 
-        // 3. Comprobamos la fecha de caducidad (Igual que en un voto normal)
+        // 3. Comprobamos la fecha de caducidad
         $votacion = Votacion::find($request->votacion_id);
         if ($votacion->fecha_limite && now()->greaterThan($votacion->fecha_limite)) {
             return response()->json([

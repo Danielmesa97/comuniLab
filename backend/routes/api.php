@@ -9,6 +9,7 @@ use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\IncidenciaController;
 use App\Http\Controllers\AnuncioController;
 use App\Http\Controllers\VotacionController;
+use App\Http\Controllers\InstalacionController;
 use App\Http\Controllers\SuperAdmin\ComunidadAdminController;
 
 /*
@@ -77,6 +78,30 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/votaciones/delegar', [VotacionController::class, 'delegar']);
     Route::post('/votaciones/ejecutar-delegado', [VotacionController::class, 'ejecutarDelegado']);
 
+     /*
+    |--------------------------------------------------------------------------
+    | Vivienda
+    |--------------------------------------------------------------------------
+    */
+
+
+    Route::post('/viviendas', [ViviendaController::class, 'store']);
+    Route::put('/viviendas/{id}', [ViviendaController::class, 'update']);
+    Route::delete('/viviendas/{id}', [ViviendaController::class, 'destroy']);
+    Route::get('/viviendas', [ViviendaController::class, 'index']);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INSTALACIONES
+    |--------------------------------------------------------------------------
+    */
+
+    
+    Route::get('/instalaciones', [InstalacionController::class, 'index']);
+    Route::get('/instalaciones/{id}/reservas', [InstalacionController::class, 'getReservas']);
+    Route::post('/reservas', [InstalacionController::class, 'storeReserva']);
+
 
     /*
     |--------------------------------------------------------------------------
@@ -115,16 +140,14 @@ Route::middleware([
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/comunidades', [
-        ComunidadAdminController::class,
-        'index'
-    ]);
-
-    Route::post('/comunidades', [
-        ComunidadAdminController::class,
-        'store'
-    ]);
-
+    Route::get('/comunidades', [ComunidadAdminController::class, 'index']);
+    Route::post('/comunidades', [ComunidadAdminController::class, 'store']);
+    Route::put('/comunidades/{id}', [ComunidadAdminController::class, 'update']);
+    Route::delete('/comunidades/{id}', [ComunidadAdminController::class, 'destroy']);
+    Route::get(
+        '/comunidades/{id}',
+        [ComunidadAdminController::class, 'show']
+    );
     /*
     |--------------------------------------------------------------------------
     | VIVIENDAS

@@ -106,6 +106,7 @@
         <button class="btn-cancelar" @click="mostrarModal = false">Cancelar</button>
       </div>
     </div>
+
     <div v-if="mostrarModalCrear" class="modal-overlay">
       <div class="modal-content crear-modal">
         <h3>Crear Nueva Votación</h3>
@@ -228,7 +229,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { apiUrl } from '@/lib/api'
+import {
+  apiUrl,
+  authHeaders
+} from '@/lib/api'
 
 // ============================================================================
 // 1. VARIABLES GLOBALES Y ESTADO (STATE)
@@ -270,14 +274,10 @@ const nuevaVotacion = ref({             // Formulario de nueva votación
 
 const getVotaciones = async () => {
   try {
-    const token = localStorage.getItem('auth_token')
     const url = `${apiUrl('/api/votaciones')}?buscar=${textoBusqueda.value}`
 
     const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeaders(),
     })
 
     const data = await response.json()
@@ -334,8 +334,6 @@ const abrirModalDelegado = (votacion, delegacion) => {
 
 const enviarVoto = async (opcion) => {
   try {
-    const token = localStorage.getItem('auth_token')
-    
     // Verificamos si estamos votando por nosotros o por un vecino
     const esDelegado = delegacionActiva.value !== null
     
@@ -354,11 +352,7 @@ const enviarVoto = async (opcion) => {
 
     const response = await fetch(apiUrl(endpoint), {
       method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeaders(),
       body: JSON.stringify(bodyData),
     })
 
@@ -392,7 +386,6 @@ const enviarVoto = async (opcion) => {
   }
 }
 
-
 // ============================================================================
 // 4. LÓGICA DE CESIÓN DE VOTO (DAR TU VOTO A UN VECINO)
 // ============================================================================
@@ -402,12 +395,8 @@ const iniciarDelegacion = async (votacion) => {
   viviendaDelegadaId.value = '' 
   
   try {
-    const token = localStorage.getItem('auth_token')
     const response = await fetch(apiUrl('/api/viviendas'), {
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`
-      }
+      headers: authHeaders() // <-- También actualicé esto por si acaso para mantener todo limpio
     })
 
     if (response.ok) {
@@ -425,14 +414,9 @@ const iniciarDelegacion = async (votacion) => {
 
 const confirmarDelegacion = async () => {
   try {
-    const token = localStorage.getItem('auth_token')
     const response = await fetch(apiUrl('/api/votaciones/delegar'), {
       method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeaders(), // <-- Limpiado también
       body: JSON.stringify({
         votacion_id: votacionSeleccionada.value.id,
         vivienda_delegada_id: viviendaDelegadaId.value
@@ -467,15 +451,11 @@ const abrirModalCrear = () => {
 
 const guardarNuevaVotacion = async () => {
   try {
-    const token = localStorage.getItem('auth_token')
-
+    // Hacemos la petición POST a tu API de Laravel
     const response = await fetch(apiUrl('/api/votaciones'), {
       method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeaders(),
+      // Convertimos nuestro objeto reactivo a formato JSON
       body: JSON.stringify(nuevaVotacion.value),
     })
 
@@ -504,7 +484,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* ... (Tus estilos base) ... */
+/* ... ... */
 .dashboard-container {
   display: flex;
   flex-direction: column;
@@ -709,18 +689,17 @@ onMounted(() => {
 
 .percentage-badge {
   position: absolute;
-  top: 15px; /* Distancia desde arriba */
-  right: 15px; /* Distancia desde la derecha */
+  top: 15px; 
+  right: 15px; 
   background-color: #e0f7fa;
   color: #00796b;
   padding: 5px 10px;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra suave para darle volumen */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
 }
 
-/* Añadimos el select aquí */
 .form-group input,
 .form-group textarea,
 .form-group select {
@@ -729,10 +708,9 @@ onMounted(() => {
   border-radius: 8px;
   font-size: 15px;
   font-family: inherit;
-  background-color: white; /* Añadimos fondo blanco para el select */
+  background-color: white; 
 }
 
-/* Y también lo añadimos en el estado focus para cuando pinchen en él */
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {

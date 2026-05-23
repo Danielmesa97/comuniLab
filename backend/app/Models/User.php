@@ -37,6 +37,7 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+
     public function vivienda()
     {
         return $this->belongsTo(Vivienda::class);
@@ -59,4 +60,13 @@ class User extends Authenticatable
 {
     return $this->hasMany(Voto::class);
 }
+
+public function comunidades()
+{
+    return $this->belongsToMany(
+        Comunidad::class,
+        'comunidad_user'
+    )->withPivot('role');
+}
+
 }

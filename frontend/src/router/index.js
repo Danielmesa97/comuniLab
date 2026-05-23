@@ -15,6 +15,9 @@ import SuperAdminDashboard from '../views/superadmin/SuperAdminDashboard.vue'
 import ComunidadesAdmin from '../views/superadmin/ComunidadesAdmin.vue'
 import SuperAdminLayout from '../views/superadmin/SuperAdminLayout.vue'
 import SuperAdminCommunityLayout from '@/views/superadmin/SuperAdminCommunityLayout.vue'
+import UsuariosAdmin from '@/views/superadmin/UsuariosAdmin.vue'
+import ViviendasAdmin
+from '@/views/superadmin/ViviendasAdmin.vue'
 
 const routes = [
   { path: '/', name: 'login', component: LoginView },
@@ -47,7 +50,16 @@ const routes = [
       path: 'comunidades/:id',
       component: () =>
         import('@/views/superadmin/ComunidadDetailAdmin.vue')
-    }
+    },
+    {
+      path: 'usuarios',
+      component: UsuariosAdmin,
+    },
+
+    {
+      path: 'viviendas',
+      component: ViviendasAdmin,
+    },
 
   ]
 

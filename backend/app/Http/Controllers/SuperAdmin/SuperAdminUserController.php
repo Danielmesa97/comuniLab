@@ -45,7 +45,10 @@ class SuperAdminUserController extends Controller
         if (!empty($data['comunidad_id'])) {
 
             $user->comunidades()->attach(
-                $data['comunidad_id']
+                $data['comunidad_id'],
+                [
+                    'role' => $data['role']
+                ]
             );
 
         }

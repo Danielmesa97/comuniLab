@@ -12,7 +12,7 @@ use App\Http\Controllers\VotacionController;
 use App\Http\Controllers\InstalacionController;
 use App\Http\Controllers\SuperAdmin\ComunidadAdminController;
 use App\Http\Controllers\SuperAdmin\SuperAdminUserController;
-
+use App\Http\Controllers\SuperAdmin\SuperAdminViviendaController;
 /*
 |--------------------------------------------------------------------------
 | RUTAS PÚBLICAS
@@ -155,12 +155,21 @@ Route::middleware([
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/viviendas', function () {
-        return response()->json([
-            'message' => 'Ruta superadmin viviendas'
-        ]);
-    });
+    // VIVIENDAS
+    Route::get(
+        '/viviendas',
+        [SuperAdminViviendaController::class, 'index']
+    );
 
+    Route::post(
+        '/viviendas',
+        [SuperAdminViviendaController::class, 'store']
+    );
+
+    Route::delete(
+        '/viviendas/{id}',
+        [SuperAdminViviendaController::class, 'destroy']
+    );
     /*
 |--------------------------------------------------------------------------
 | USUARIOS
@@ -181,24 +190,5 @@ Route::put(
     '/usuarios/{id}/toggle-activo',
     [SuperAdminUserController::class, 'toggleActivo']
 );
-
-    /*
-    |--------------------------------------------------------------------------
-    | USUARIOS
-    |--------------------------------------------------------------------------
-    */
-    Route::middleware([
-        'auth:sanctum',
-        'superadmin'
-    ])
-    ->prefix('superadmin')
-    ->group(function () {
-
-
-    Route::get('/usuarios', function () {
-        return response()->json([
-            'message' => 'Ruta superadmin usuarios'
-        ]);
-    });
 
 });

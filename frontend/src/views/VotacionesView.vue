@@ -29,7 +29,9 @@
       <section class="votaciones-wrapper">
         <div v-if="votaciones.length > 0" class="list-container">
           <div v-for="v in votaciones" :key="v.id" class="votacion-card">
-            <span class="percentage-badge"> 👍 {{ calcularPorcentajeSi(v) }}% Sí </span>
+            <button class="percentage-badge-btn" @click="verResultados(v)">
+              📊 Ver Resultados ({{ calcularPorcentajeSi(v) }}% Sí)
+            </button>
 
             <div class="card-info">
               <h3>{{ v.titulo }}</h3>
@@ -37,7 +39,6 @@
 
               <div class="badges-container">
                 <span class="status-badge" :class="v.estado">{{ v.estado }}</span>
-                <!-- NUEVO: Etiqueta de fecha límite -->
                 <span v-if="v.fecha_limite" class="date-badge">
                   ⏳ Finaliza: {{ v.fecha_limite }}
                 </span>
@@ -45,24 +46,40 @@
             </div>
 
             <div class="acciones-votacion" style="margin-top: 15px">
-              <!-- CASO 1: El usuario ya ha votado -->
               <button v-if="isVoted(v.id)" class="vote-action-btn voted-btn" disabled>
                 ✅ Ya has votado
               </button>
 
-              <!-- CASO 2: No ha votado y la votación sigue ACTIVA -->
-              <button
-                v-else-if="estaActiva(v.fecha_limite)"
-                class="vote-action-btn"
-                @click="abrirModal(v)"
-              >
-                Votar ahora
-              </button>
+              <div v-else-if="estaActiva(v.fecha_limite)" class="botones-activos">
+                <button class="vote-action-btn" @click="abrirModal(v)">
+                  Votar ahora
+                </button>
+                
+                <button class="delegate-action-btn" @click="iniciarDelegacion(v)">
+                  🤝 Delegar voto
+                </button>
+              </div>
 
-              <!-- CASO 3: No ha votado, pero la votación YA CADUCÓ -->
               <button v-else class="vote-action-btn voted-btn" disabled>
                 ⏳ Votación finalizada
               </button>
+
+              <div 
+                v-for="del in delegacionesPendientes.filter(d => d.votacion_id === v.id)" 
+                :key="del.id" 
+                style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc;"
+              >
+                <p style="font-size: 13px; color: #555; margin-bottom: 8px;">
+                  🤝 El <strong>Piso {{ del.vivienda.nombre }}</strong> ha delegado su decisión en ti.
+                </p>
+                <button 
+                  class="vote-action-btn" 
+                  style="background-color: #ff9500; width: 100%;" 
+                  @click="abrirModalDelegado(v, del)"
+                >
+                  Votar en nombre del Piso {{ del.vivienda.nombre }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -89,7 +106,7 @@
         <button class="btn-cancelar" @click="mostrarModal = false">Cancelar</button>
       </div>
     </div>
-    <!-- MODAL PARA CREAR NUEVA VOTACIÓN -->
+
     <div v-if="mostrarModalCrear" class="modal-overlay">
       <div class="modal-content crear-modal">
         <h3>Crear Nueva Votación</h3>
@@ -119,7 +136,6 @@
 
           <div class="form-group">
             <label for="fecha_limite">Fecha Límite (Opcional)</label>
-            <!-- Usamos datetime-local para que el usuario elija día y hora -->
             <input type="datetime-local" id="fecha_limite" v-model="nuevaVotacion.fecha_limite" />
           </div>
 
@@ -130,6 +146,67 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div v-if="mostrarModalDelegar" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Delegar Voto</h3>
+        <p>
+          Selecciona el piso al que deseas delegar tu voto para la propuesta: <br>
+          <strong>{{ votacionSeleccionada?.titulo }}</strong>
+        </p>
+
+        <div class="form-group" style="margin-top: 20px; text-align: left;">
+          <label for="vivienda-delegada">Vecino representante:</label>
+          <select 
+            id="vivienda-delegada" 
+            v-model="viviendaDelegadaId" 
+          >
+            <option value="" disabled>Selecciona un piso...</option>
+            <option v-for="viv in viviendasDisponibles" :key="viv.id" :value="viv.id">
+              Piso {{ viv.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button 
+            class="btn-si" 
+            @click="confirmarDelegacion" 
+            :disabled="!viviendaDelegadaId"
+            :style="{ opacity: !viviendaDelegadaId ? 0.5 : 1, cursor: !viviendaDelegadaId ? 'not-allowed' : 'pointer' }"
+          >
+            🤝 Confirmar
+          </button>
+          <button class="btn-no" @click="mostrarModalDelegar = false">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="mostrarModalResultados" class="modal-overlay">
+      <div class="modal-content resultados-modal">
+        <h3>Resultados: {{ tituloVotacionResultados }}</h3>
+        
+        <div class="tabla-resultados">
+          <div class="tabla-header">
+            <span>Vivienda</span>
+            <span>Voto</span>
+          </div>
+          <div v-for="voto in resultadosSeleccionados" :key="voto.id" class="tabla-fila">
+            <span class="piso-nombre">Piso {{ voto.vivienda.nombre }}</span>
+            <span :class="['voto-tag', voto.opcion]">
+              {{ voto.opcion === 'si' ? '👍 SÍ' : '👎 NO' }}
+            </span>
+          </div>
+          <div v-if="resultadosSeleccionados.length === 0" class="no-votos">
+            Aún no hay votos registrados.
+          </div>
+        </div>
+
+        <button class="btn-cancelar" @click="mostrarModalResultados = false">Cerrar</button>
       </div>
     </div>
 
@@ -156,32 +233,52 @@ import {
   apiUrl,
   authHeaders
 } from '@/lib/api'
+
+// ============================================================================
+// 1. VARIABLES GLOBALES Y ESTADO (STATE)
+// ============================================================================
 const user = JSON.parse(localStorage.getItem('user'))
 const textoBusqueda = ref('')
+
+// Listados de datos
 const votaciones = ref([])
-const mostrarModal = ref(false)
-const votacionSeleccionada = ref(null)
-
-// 1. VARIABLE PARA GUARDAR LOS IDs VOTADOS
 const votacionesVotadas = ref([])
+const delegacionesPendientes = ref([]) 
+const viviendasDisponibles = ref([]) 
 
-// Función para saber si ya se votó una encuesta específica
-const isVoted = (id) => {
-  return votacionesVotadas.value.includes(id)
-}
+// --- NUEVAS CONSTANTES PARA RESULTADOS PÚBLICOS ---
+const mostrarModalResultados = ref(false)   // Controla el nuevo modal de la matriz
+const resultadosSeleccionados = ref([])     // Guarda los votos detallados (Piso + Opción)
+const tituloVotacionResultados = ref('')    // Título para la cabecera del modal
+// --------------------------------------------------
+
+// Estados de los Modales
+const mostrarModal = ref(false)         // Modal para votar (propio o delegado)
+const mostrarModalCrear = ref(false)    // Modal para crear nueva votación
+const mostrarModalDelegar = ref(false)  // Modal para ceder tu voto a un vecino
+
+// Elementos seleccionados temporalmente
+const votacionSeleccionada = ref(null)
+const delegacionActiva = ref(null)      // Guarda qué delegación estamos resolviendo
+const viviendaDelegadaId = ref('')      // Guarda a qué piso le vamos a ceder el voto
+const nuevaVotacion = ref({             // Formulario de nueva votación
+  titulo: '',
+  descripcion: '',
+  fecha_limite: '',
+})
+
+
+// ============================================================================
+// 2. FUNCIONES DE LECTURA (FETCH Y HELPERS)
+// ============================================================================
 
 const getVotaciones = async () => {
   try {
-    const url =
-  `${apiUrl('/api/votaciones')}` +
-  `?buscar=${textoBusqueda.value}`
+    const url = `${apiUrl('/api/votaciones')}?buscar=${textoBusqueda.value}`
 
-const response = await fetch(
-  url,
-  {
-    headers: authHeaders(),
-  }
-)
+    const response = await fetch(url, {
+      headers: authHeaders(),
+    })
 
     const data = await response.json()
 
@@ -189,40 +286,97 @@ const response = await fetch(
       console.error(data)
       return
     }
+    
     votaciones.value = data.votaciones || []
     votacionesVotadas.value = data.mis_votos || []
+    delegacionesPendientes.value = data.delegaciones_pendientes || []
+    
   } catch (error) {
     console.error('Error cargando votaciones:', error)
   }
 }
 
+// NUEVA FUNCIÓN PARA LA MATRIZ DE RESULTADOS
+const verResultados = (votacion) => {
+  tituloVotacionResultados.value = votacion.titulo
+  // Filtramos los votos que ya tienen una opción elegida (ignoramos delegaciones vacías)
+  resultadosSeleccionados.value = votacion.votos ? votacion.votos.filter(v => v.opcion !== null) : []
+  mostrarModalResultados.value = true
+}
+
+const isVoted = (id) => votacionesVotadas.value.includes(id)
+
+const estaActiva = (fechaLimite) => {
+  if (!fechaLimite) return true
+  return new Date() <= new Date(fechaLimite)
+}
+
+const calcularPorcentajeSi = (votacion) => {
+  if (!votacion.votos_count || votacion.votos_count === 0) return 0
+  return Math.round((votacion.votos_si_count / votacion.votos_count) * 100)
+}
+
+// ============================================================================
+// 3. LÓGICA DE VOTACIÓN (PROPIA Y EN NOMBRE DE OTRO)
+// ============================================================================
+
 const abrirModal = (votacion) => {
   votacionSeleccionada.value = votacion
+  delegacionActiva.value = null // Nos aseguramos de que es voto propio
+  mostrarModal.value = true
+}
+
+const abrirModalDelegado = (votacion, delegacion) => {
+  votacionSeleccionada.value = votacion
+  delegacionActiva.value = delegacion // Guardamos el poder que nos ha dado el vecino
   mostrarModal.value = true
 }
 
 const enviarVoto = async (opcion) => {
   try {
-    const response = await fetch(
-  apiUrl('/api/votaciones/votar'),
-  {
-    method: 'POST',
+    // Verificamos si estamos votando por nosotros o por un vecino
+    const esDelegado = delegacionActiva.value !== null
+    
+    // Si somos delegados, mandamos a la nueva ruta especial de Laravel
+    const endpoint = esDelegado ? '/api/votaciones/ejecutar-delegado' : '/api/votaciones/votar'
+    
+    const bodyData = {
+      votacion_id: votacionSeleccionada.value.id,
+      opcion: opcion
+    }
+    
+    // Si somos delegados, le mandamos a Laravel el ID de ese registro específico
+    if (esDelegado) {
+      bodyData.voto_id = delegacionActiva.value.id
+    }
 
-    headers: authHeaders(),
-      body: JSON.stringify({
-        votacion_id: votacionSeleccionada.value.id,
-        opcion: opcion,
-      }),
+    const response = await fetch(apiUrl(endpoint), {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(bodyData),
     })
 
     if (response.ok) {
-      // 2. AÑADIMOS EL ID A LA LISTA DE VOTADOS
-      votacionesVotadas.value.push(votacionSeleccionada.value.id)
-
-      // 3. CERRAMOS EL MODAL
+      // 1. Cerramos el modal primero para dar sensación de velocidad
       mostrarModal.value = false
+      delegacionActiva.value = null
 
-      alert('¡Voto registrado correctamente!')
+      // Volvemos a pedir los datos al servidor para actualizar porcentajes y matriz
+      await getVotaciones()
+      if (esDelegado) {
+        // Ocultamos visualmente la delegación que acabamos de resolver
+        delegacionesPendientes.value = delegacionesPendientes.value.filter(d => d.id !== delegacionActiva.value.id)
+        alert('¡Voto del vecino registrado correctamente!')
+      } else {
+        // Apuntamos nuestro propio voto para bloquear el botón
+        votacionesVotadas.value.push(votacionSeleccionada.value.id)
+        alert('¡Tu voto ha sido registrado correctamente!')
+      }
+
+      // Limpiamos y cerramos
+      delegacionActiva.value = null
+      mostrarModal.value = false
+      
     } else {
       const errorData = await response.json()
       alert('Error: ' + (errorData.message || 'No se pudo procesar el voto'))
@@ -232,26 +386,66 @@ const enviarVoto = async (opcion) => {
   }
 }
 
-// CREAR VOTACIÓN ---
-const mostrarModalCrear = ref(false)
-const nuevaVotacion = ref({
-  titulo: '',
-  descripcion: '',
-  fecha_limite: '',
-})
+// ============================================================================
+// 4. LÓGICA DE CESIÓN DE VOTO (DAR TU VOTO A UN VECINO)
+// ============================================================================
 
-// Calcular el porcentaje de Sí
-const calcularPorcentajeSi = (votacion) => {
-  // Si nadie ha votado aún, devolvemos 0 para evitar dividir por cero
-  if (!votacion.votos_count || votacion.votos_count === 0) {
-    return 0
+const iniciarDelegacion = async (votacion) => {
+  votacionSeleccionada.value = votacion
+  viviendaDelegadaId.value = '' 
+  
+  try {
+    const response = await fetch(apiUrl('/api/viviendas'), {
+      headers: authHeaders() 
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      
+      // Usamos 'data' directamente porque en la rama dev Laravel devuelve el array limpio
+      viviendasDisponibles.value = data.filter(v => v.id !== user?.vivienda_id)
+      
+      mostrarModalDelegar.value = true
+    } else {
+      alert('Error al cargar la lista de vecinos.')
+    }
+  } catch (error) {
+    console.error('Error cargando viviendas:', error)
   }
-
-  const porcentaje = (votacion.votos_si_count / votacion.votos_count) * 100
-  return Math.round(porcentaje)
 }
 
-// Función para abrir el panel y limpiar el formulario
+const confirmarDelegacion = async () => {
+  try {
+    const response = await fetch(apiUrl('/api/votaciones/delegar'), {
+      method: 'POST',
+      headers: authHeaders(), // <-- Limpiado también
+      body: JSON.stringify({
+        votacion_id: votacionSeleccionada.value.id,
+        vivienda_delegada_id: viviendaDelegadaId.value
+      })
+    })
+
+    if (response.ok) {
+      mostrarModalDelegar.value = false
+      
+      // Refrescamos para que el botón de la votación cambie a "Ya has participado"
+      await getVotaciones() 
+      
+      alert('¡Has delegado tu voto correctamente!')
+    } else {
+      const errorData = await response.json()
+      alert('Error: ' + (errorData.message || 'No se pudo procesar la delegación'))
+    }
+  } catch (error) {
+    console.error('Error al delegar:', error)
+  }
+}
+
+
+// ============================================================================
+// 5. LÓGICA DE CREACIÓN DE VOTACIONES (ADMIN/PRESIDENTE)
+// ============================================================================
+
 const abrirModalCrear = () => {
   nuevaVotacion.value = { titulo: '', descripcion: '', fecha_limite: '' }
   mostrarModalCrear.value = true
@@ -260,33 +454,21 @@ const abrirModalCrear = () => {
 const guardarNuevaVotacion = async () => {
   try {
     // Hacemos la petición POST a tu API de Laravel
-const response = await fetch(
-  apiUrl('/api/votaciones'),
-  {
-    method: 'POST',
-
-    headers: authHeaders(),
+    const response = await fetch(apiUrl('/api/votaciones'), {
+      method: 'POST',
+      headers: authHeaders(),
       // Convertimos nuestro objeto reactivo a formato JSON
       body: JSON.stringify(nuevaVotacion.value),
     })
 
     if (response.ok) {
-      // El backend nos devuelve la votación recién creada
       const nuevaVotacionCreada = await response.json()
-
-      // 1. Añadimos la nueva votación a nuestra lista para que aparezca en pantalla sin recargar
-      votaciones.value.push(nuevaVotacionCreada.votacion || nuevaVotacionCreada)
-
-      // 2. Cerramos el panel
+      votaciones.value.unshift(nuevaVotacionCreada.votacion || nuevaVotacionCreada) // unshift lo pone el primero
       mostrarModalCrear.value = false
-
-      // 3. Reseteamos los campos del formulario para la próxima vez
       nuevaVotacion.value = { titulo: '', descripcion: '', fecha_limite: '' }
     } else {
-      // Si Laravel devuelve un error de validación (ej. falta el título)
       const errorData = await response.json()
       alert('Error: ' + (errorData.message || 'No se pudo crear la votación'))
-      console.error('Errores de validación:', errorData.errors)
     }
   } catch (error) {
     console.error('Error de conexión:', error)
@@ -294,18 +476,13 @@ const response = await fetch(
   }
 }
 
-// Función para saber si una votación sigue activa hoy
-const estaActiva = (fechaLimite) => {
-  // Si la fecha límite es null (no caduca nunca), siempre está activa
-  if (!fechaLimite) return true
+// ============================================================================
+// 6. INICIALIZACIÓN
+// ============================================================================
+onMounted(() => {
+  getVotaciones()
+})
 
-  const fechaFin = new Date(fechaLimite)
-  const hoy = new Date()
-
-  return hoy <= fechaFin
-}
-
-onMounted(getVotaciones)
 </script>
 
 <style scoped>
@@ -340,6 +517,18 @@ onMounted(getVotaciones)
   position: relative;
 }
 
+/* CONTENEDOR PARA LOS BOTONES DE ACCIÓN */
+.botones-activos {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.botones-activos .vote-action-btn,
+.botones-activos .delegate-action-btn {
+  flex: 1;
+}
+
 /* BOTÓN NORMAL */
 .vote-action-btn {
   background: #007aff;
@@ -350,6 +539,22 @@ onMounted(getVotaciones)
   font-weight: 600;
   cursor: pointer;
   transition: background 0.3s;
+}
+
+/* BOTÓN DE DELEGAR (SECUNDARIO) */
+.delegate-action-btn {
+  background: transparent;
+  color: #007aff;
+  border: 2px solid #007aff;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.delegate-action-btn:hover {
+  background: #e5f1ff; 
 }
 
 /* ESTILO PARA BOTÓN GRIS (CUANDO YA SE VOTÓ) */
@@ -486,14 +691,104 @@ onMounted(getVotaciones)
 
 .percentage-badge {
   position: absolute;
-  top: 15px; /* Distancia desde arriba */
-  right: 15px; /* Distancia desde la derecha */
+  top: 15px; 
+  right: 15px; 
   background-color: #e0f7fa;
   color: #00796b;
   padding: 5px 10px;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra suave para darle volumen */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 12px;
+  border: 1px solid #d1d1d6;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  background-color: white; 
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #007aff;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.percentage-badge-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: #e0f7fa;
+  color: #00796b;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.percentage-badge-btn:hover {
+  transform: scale(1.05);
+  background-color: #b2ebf2;
+}
+
+.resultados-modal {
+  max-width: 450px;
+}
+
+.tabla-resultados {
+  margin: 20px 0;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e5e5ea;
+  border-radius: 12px;
+}
+
+.tabla-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background: #f2f2f7;
+  font-weight: bold;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.tabla-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  border-bottom: 1px solid #f2f2f7;
+}
+
+.piso-nombre {
+  font-weight: 500;
+  color: #333;
+}
+
+.voto-tag {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.voto-tag.si {
+  background: #e1ffdc;
+  color: #28a745;
+}
+
+.voto-tag.no {
+  background: #ffdce0;
+  color: #d73a49;
 }
 </style>

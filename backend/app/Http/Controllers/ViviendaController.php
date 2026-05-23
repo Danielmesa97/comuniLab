@@ -14,12 +14,10 @@ class ViviendaController extends Controller
 
         // FILTRO POR COMUNIDAD
         if ($request->has('comunidad_id')) {
-
             $query->where(
                 'comunidad_id',
                 $request->comunidad_id
             );
-
         }
 
         return response()->json(

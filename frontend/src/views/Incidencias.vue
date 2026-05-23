@@ -7,7 +7,9 @@
         <p>Gestiona los problemas de tu comunidad</p>
       </div>
 
-      <button class="icon-btn" @click="mostrarForm = true">➕</button>
+      <button class="btn-add-circular" @click="mostrarForm = true">
+        <span>+</span>
+      </button>
     </header>
 
     <!-- CONTENIDO -->

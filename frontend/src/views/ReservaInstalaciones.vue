@@ -5,6 +5,20 @@
       <p>Selecciona un espacio comunitario para gestionar tu reserva</p>
     </header>
 
+    <div v-if="isAdmin && user.comunidades?.length > 1" class="selector-comunidad">
+  <label>Comunidad activa</label>
+
+  <select v-model="comunidadActivaId" @change="cambiarComunidadActiva">
+    <option
+      v-for="c in user.comunidades"
+      :key="c.id"
+      :value="c.id"
+    >
+      {{ c.nombre }}
+    </option>
+  </select>
+</div>
+
     <main class="grid-instalaciones">
       <div v-for="inst in instalaciones" :key="inst.id" class="card-instalacion">
         <div class="card-imagen">{{ inst.icono }}</div>
@@ -21,9 +35,50 @@
           <button class="btn-reservar" @click="abrirModalReserva(inst)">
             Reservar espacio
           </button>
+
+          <button
+            v-if="isAdmin"
+            class="btn-eliminar"
+            @click="eliminarInstalacion(inst.id)"
+          >
+            Eliminar
+          </button>
         </div>
       </div>
+      <div
+  v-if="isAdmin"
+  class="create-card"
+>
 
+  <input
+    v-model="nuevaInstalacion.nombre"
+    placeholder="Nombre instalación"
+  >
+
+  <input
+    v-model="nuevaInstalacion.descripcion"
+    placeholder="Descripción"
+  >
+
+  <input
+    v-model="nuevaInstalacion.icono"
+    placeholder="Icono"
+  >
+
+  <input
+    v-model="nuevaInstalacion.aforo_max"
+    type="number"
+    placeholder="Aforo"
+  >
+
+  <button
+    class="btn-crear"
+    @click="crearInstalacion"
+  >
+    Crear instalación
+  </button>
+
+</div>
       <div v-if="instalaciones.length === 0" class="no-data">
         <p>No hay instalaciones disponibles en tu comunidad actualmente.</p>
       </div>
@@ -94,9 +149,38 @@
 import { ref, computed, onMounted } from 'vue'
 import { apiUrl } from '@/lib/api'
 
-const user = JSON.parse(localStorage.getItem('user') || '{}')
-const token = localStorage.getItem('auth_token')
+const user = JSON.parse(
+  localStorage.getItem('user') || '{}'
+)
 
+const isAdmin =
+  user.role === 'admin'
+  ||
+  user.role === 'presidente'
+
+const comunidadActivaId = ref(
+  localStorage.getItem('selected_comunidad_id') ||
+  user.comunidades?.[0]?.id ||
+  ''
+)
+
+const nuevaInstalacion = ref({
+  nombre: '',
+  descripcion: '',
+  duracion_franja: 90,
+  aforo_max: 10,
+  icono: '🏟️'
+})
+
+const token = localStorage.getItem('auth_token')
+const cambiarComunidadActiva = () => {
+  localStorage.setItem(
+    'selected_comunidad_id',
+    comunidadActivaId.value
+  )
+
+  getInstalaciones()
+}
 // Estados reactivos (Ahora empiezan vacíos para llenarse con el backend)
 const instalaciones = ref([])
 const reservasExistentes = ref([])
@@ -144,7 +228,10 @@ const diasSemana = computed(() => {
 const getInstalaciones = async () => {
   try {
     const res = await fetch(apiUrl('/api/instalaciones'), {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Comunidad-Id': comunidadActivaId.value
+      }
     })
     
     if (res.ok) {
@@ -156,6 +243,96 @@ const getInstalaciones = async () => {
     console.error('Error de red cargando instalaciones:', error)
   }
 }
+
+/*
+|--------------------------------------------------------------------------
+| CREAR INSTALACIÓN
+|--------------------------------------------------------------------------
+*/
+
+const crearInstalacion = async () => {
+
+  try {
+
+    const res = await fetch(
+      apiUrl('/api/instalaciones'),
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json',
+
+          Authorization: `Bearer ${token}`,
+
+          'X-Comunidad-Id':
+            comunidadActivaId.value
+        },
+
+        body: JSON.stringify(
+          nuevaInstalacion.value
+        )
+      }
+    )
+
+    if (res.ok) {
+
+      nuevaInstalacion.value = {
+        nombre: '',
+        descripcion: '',
+        duracion_franja: 90,
+        aforo_max: 10,
+        icono: '🏟️'
+      }
+
+      getInstalaciones()
+
+      alert('Instalación creada')
+
+    }
+
+  } catch (error) {
+
+    console.error(error)
+
+  }
+
+}
+
+/*
+|--------------------------------------------------------------------------
+| ELIMINAR
+|--------------------------------------------------------------------------
+*/
+
+const eliminarInstalacion = async (id) => {
+
+  if (!confirm('¿Eliminar instalación?'))
+    return
+
+  try {
+
+    await fetch(
+      apiUrl(`/api/instalaciones/${id}`),
+      {
+        method: 'DELETE',
+
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-Comunidad-Id': comunidadActivaId.value
+        }
+      }
+    )
+
+    getInstalaciones()
+
+  } catch (error) {
+
+    console.error(error)
+
+  }
+
+}
+
 
 const obtenerEstadoCelda = (fecha, franjaId) => {
   const ocupado = reservasExistentes.value.some(r => r.fecha === fecha && r.franja_id === franjaId)
@@ -615,4 +792,70 @@ onMounted(() => {
 .full-width {
   width: 100%;
 }
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN
+|--------------------------------------------------------------------------
+*/
+
+.create-card{
+  background:white;
+  padding:20px;
+  border-radius:20px;
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+  flex-wrap:wrap;
+}
+
+.create-card input{
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  flex:1;
+}
+
+.btn-crear{
+  background:#34c759;
+  color:white;
+  border:none;
+  padding:10px 18px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.btn-eliminar{
+  margin-top:10px;
+  background:#ff3b30;
+  color:white;
+  border:none;
+  padding:10px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+.selector-comunidad{
+  background:white;
+  padding:16px;
+  border-radius:16px;
+  margin-bottom:20px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+}
+
+.selector-comunidad label{
+  font-weight:700;
+}
+
+.selector-comunidad select{
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
 </style>

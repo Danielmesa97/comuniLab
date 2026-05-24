@@ -9,41 +9,54 @@ class IncidenciaController extends Controller
 {
     // 🔹 LISTAR INCIDENCIAS
     public function index(Request $request)
-    {
+{
+    /*
+    |--------------------------------------------------------------------------
+    | SUPERADMIN / ADMIN / PRESIDENTE
+    |--------------------------------------------------------------------------
+    */
 
-        // 🔥 SUPERADMIN ENTRANDO A COMUNIDAD
+    if (
+        in_array(
+            $request->user()->role,
+            ['superadmin', 'admin', 'presidente']
+        )
+    ) {
 
-        if ($request->user()->role === 'superadmin') {
-
-            $comunidadId = $request->header(
-                'X-Comunidad-Id'
-            );
-
-        }
-
-        // 🔹 USUARIO NORMAL
-
-        else {
-
-            $comunidadId =
-                $request->user()
-                ->vivienda
-                ->comunidad_id;
-
-        }
-
-        $query = Incidencia::where(
-            'comunidad_id',
-            $comunidadId
-        );
-
-        return response()->json(
-            $query
-                ->orderBy('created_at', 'desc')
-                ->get()
+        $comunidadId = $request->header(
+            'X-Comunidad-Id'
         );
 
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROPIETARIO / INQUILINO
+    |--------------------------------------------------------------------------
+    */
+
+    else {
+
+        $comunidadId =
+            $request->user()
+                ->vivienda
+                ->comunidad_id;
+
+    }
+
+    $query = Incidencia::where(
+        'comunidad_id',
+        $comunidadId
+    );
+
+    return response()->json(
+
+        $query
+            ->orderBy('created_at', 'desc')
+            ->get()
+
+    );
+}
 
     // 🔹 CREAR INCIDENCIA
     public function store(Request $request)

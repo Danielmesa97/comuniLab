@@ -86,7 +86,8 @@ const filtroHasta = ref('')
 
 // USER
 const user = JSON.parse(localStorage.getItem('user') || '{}')
-
+const comunidadActiva =
+  localStorage.getItem('comunidad_activa')
 const isAdmin = computed(() => ['admin', 'presidente', 'superadmin'].includes(user.role))
 
 // FORM
@@ -146,7 +147,10 @@ if (
 }
 
 const res = await fetch(url, {
-  headers: authHeaders(),
+  headers: {
+    ...authHeaders(),
+    'X-Comunidad-Id': comunidadActiva
+  },
 })
 
     const data = await res.json()
@@ -166,7 +170,10 @@ const crearAnuncio = async () => {
   {
     method: 'POST',
 
-    headers: authHeaders(),
+    headers: {
+      ...authHeaders(),
+      'X-Comunidad-Id': comunidadActiva
+    },
 
     body: JSON.stringify(form.value),
   }

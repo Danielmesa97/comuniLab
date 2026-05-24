@@ -265,6 +265,21 @@ const handleSubmit = async () => {
       localStorage.setItem('auth_token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
 
+      /*
+    |--------------------------------------------------------------------------
+    | COMUNIDAD ACTIVA
+    |--------------------------------------------------------------------------
+    */
+
+      if (data.user.comunidades?.length) {
+
+        localStorage.setItem(
+          'comunidad_activa',
+          data.user.comunidades[0].id
+        )
+
+      }
+
       // SUPERADMIN
       if (data.user.role === 'superadmin') {
 

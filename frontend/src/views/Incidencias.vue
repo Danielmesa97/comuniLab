@@ -88,7 +88,14 @@ export default {
       const res = await fetch(
         apiUrl('/api/incidencias'),
         {
-          headers: authHeaders(),
+          headers: {
+            ...authHeaders(),
+
+            'X-Comunidad-Id':
+              localStorage.getItem(
+                'comunidad_activa'
+              )
+          },
         }
       )
 
@@ -102,7 +109,16 @@ export default {
       {
         method: 'POST',
 
-        headers: authHeaders(),
+        headers: {
+
+          ...authHeaders(),
+
+          'X-Comunidad-Id':
+            localStorage.getItem(
+              'comunidad_activa'
+            )
+
+        },
 
         body: JSON.stringify(this.form),
       }

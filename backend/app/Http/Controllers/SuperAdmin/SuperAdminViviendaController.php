@@ -15,17 +15,54 @@ class SuperAdminViviendaController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(
+        $user = $request->user();
 
-            Vivienda::with(
+        /*
+        |--------------------------------------------------------------------------
+        | SUPERADMIN → VE TODO
+        |--------------------------------------------------------------------------
+        */
+
+        if ($user->role === 'superadmin') {
+
+            $viviendas = Vivienda::with(
                 'comunidad',
                 'users'
             )
             ->orderBy('id', 'desc')
-            ->get()
+            ->get();
 
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN / PRESIDENTE
+        |--------------------------------------------------------------------------
+        */
+
+        else {
+
+            $comunidadIds =
+                $user->comunidades
+                    ->pluck('id');
+
+            $viviendas = Vivienda::with(
+                'comunidad',
+                'users'
+            )
+            ->whereIn(
+                'comunidad_id',
+                $comunidadIds
+            )
+            ->orderBy('id', 'desc')
+            ->get();
+
+        }
+
+        return response()->json(
+            $viviendas
         );
     }
 
@@ -37,6 +74,8 @@ class SuperAdminViviendaController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
+
         $data = $request->validate([
 
             'nombre' =>
@@ -46,6 +85,30 @@ class SuperAdminViviendaController extends Controller
                 'required|exists:comunidades,id',
 
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR COMUNIDAD DEL ADMIN
+        |--------------------------------------------------------------------------
+        */
+
+        if ($user->role !== 'superadmin') {
+
+            $permitido =
+                $user->comunidades()
+                    ->where(
+                        'comunidad_id',
+                        $data['comunidad_id']
+                    )
+                    ->exists();
+
+            if (!$permitido) {
+
+                return response()->json([
+                    'message' => 'No autorizado'
+                ], 403);
+            }
+        }
 
         $vivienda = Vivienda::create([
 
@@ -69,9 +132,35 @@ class SuperAdminViviendaController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        $user = $request->user();
+
         $vivienda = Vivienda::findOrFail($id);
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR ADMIN
+        |--------------------------------------------------------------------------
+        */
+
+        if ($user->role !== 'superadmin') {
+
+            $permitido =
+                $user->comunidades()
+                    ->where(
+                        'comunidad_id',
+                        $vivienda->comunidad_id
+                    )
+                    ->exists();
+
+            if (!$permitido) {
+
+                return response()->json([
+                    'message' => 'No autorizado'
+                ], 403);
+            }
+        }
 
         $vivienda->delete();
 

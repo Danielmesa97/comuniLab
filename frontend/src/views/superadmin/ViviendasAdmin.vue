@@ -234,62 +234,59 @@ onMounted(() => {
   </div>
 
   <!-- MODAL -->
-  <div
-    v-if="showModal"
-    class="modal-overlay"
-  >
+<div
+  v-if="showModal"
+  class="modal-overlay"
+>
+  <div class="modal">
 
-    <div class="modal">
+    <h2>Nueva vivienda</h2>
 
-      <h2>Nueva vivienda</h2>
+    <input
+      v-model="nuevaVivienda.nombre"
+      placeholder="Nombre"
+    >
 
-      <input
-        v-model="nuevaVivienda.nombre"
-        placeholder="Nombre"
+    <select
+      v-model="nuevaVivienda.comunidad_id"
+    >
+
+      <option value="">
+        Selecciona comunidad
+      </option>
+
+      <option
+        v-for="comunidad in comunidades"
+        :key="comunidad.id"
+        :value="comunidad.id"
       >
+        {{ comunidad.nombre }}
+      </option>
 
-      <select
-        v-model="nuevaVivienda.comunidad_id"
+    </select>
+
+    <div class="modal-actions">
+
+      <button
+        class="cancel-btn"
+        @click="showModal = false"
       >
+        Cancelar
+      </button>
 
-        <option value="">
-          Selecciona comunidad
-        </option>
-
-        <option
-          v-for="comunidad in comunidades"
-          :key="comunidad.id"
-          :value="comunidad.id"
-        >
-          {{ comunidad.nombre }}
-        </option>
-
-      </select>
-
-      <div class="modal-actions">
-
-        <button
-          class="cancel-btn"
-          @click="showModal = false"
-        >
-          Cancelar
-        </button>
-
-        <button
-          class="save-btn"
-          @click="crearVivienda"
-        >
-          Crear
-        </button>
-
-      </div>
+      <button
+        class="save-btn"
+        @click="crearVivienda"
+      >
+        Crear
+      </button>
 
     </div>
 
   </div>
 
 </div>
-
+</div>
 </template>
 
 <style scoped>

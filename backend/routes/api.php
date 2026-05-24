@@ -102,6 +102,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/instalaciones', [InstalacionController::class, 'index']);
     Route::get('/instalaciones/{id}/reservas', [InstalacionController::class, 'getReservas']);
     Route::post('/reservas', [InstalacionController::class, 'storeReserva']);
+    Route::post(
+        '/instalaciones',
+        [InstalacionController::class, 'store']
+    );
+
+    Route::delete(
+        '/instalaciones/{id}',
+        [InstalacionController::class, 'destroy']
+    );
 
 
     /*

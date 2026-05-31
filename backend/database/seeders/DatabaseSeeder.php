@@ -211,5 +211,26 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => $now,
             ]
         ]);
+
+        // ==========================================
+        // 10. RELACIÓN COMUNIDAD - USUARIO (Pivot)
+        // ==========================================
+        DB::table('comunidad_user')->insert([
+            [
+                'user_id' => $presidenteId, 
+                'comunidad_id' => $comunidadId, 
+                'role' => 'presidente'
+            ],
+            [
+                'user_id' => $propietarioId, 
+                'comunidad_id' => $comunidadId, 
+                'role' => 'propietario'
+            ],
+            [
+                'user_id' => $inquilinoId, 
+                'comunidad_id' => $comunidadId, 
+                'role' => 'inquilino'
+            ],
+        ]);
     }
 }

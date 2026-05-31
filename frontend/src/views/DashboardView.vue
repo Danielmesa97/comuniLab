@@ -99,6 +99,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiUrl } from '@/lib/api'
 
+const comunidadActiva =
+  localStorage.getItem('comunidad_activa')
 const router = useRouter()
 //asegurar la vista cuando es superadmin
 const isModoComunidad =
@@ -125,28 +127,41 @@ const votaciones = ref([])
 const token = localStorage.getItem('auth_token')
 
 const getData = async () => {
-  //console.log("VOTACIONES:", votaciones.value)
   try {
-    // ANUNCIOS
+    // 1. ANUNCIOS (Le pasamos la cabecera de la comunidad)
     const resA = await fetch(apiUrl('/api/anuncios'), {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'X-Comunidad-Id': comunidadActiva
+      },
     })
-    anuncios.value = await resA.json()
+    const dataA = await resA.json()
+    // Extraemos de forma segura
+    anuncios.value = dataA.anuncios || dataA.data || dataA || []
 
-    // INCIDENCIAS
+    // 2. INCIDENCIAS (Le pasamos la cabecera de la comunidad)
     const resI = await fetch(apiUrl('/api/incidencias'), {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'X-Comunidad-Id': comunidadActiva
+      },
     })
-    incidencias.value = await resI.json()
+    const dataI = await resI.json()
+    // Extraemos de forma segura
+    incidencias.value = dataI.incidencias || dataI.data || dataI || []
 
-    // VOTACIONES
+    // 3. VOTACIONES (NO necesita la cabecera, el backend ya la saca de la vivienda)
     const resV = await fetch(apiUrl('/api/votaciones'), {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { 
+        'Authorization': `Bearer ${token}` 
+      },
     })
-    const data = await resV.json()
-    votaciones.value = (data.votaciones || data || []).filter((v) => v.estado === 'activa')
+    const dataV = await resV.json()
+    // Extraemos de forma segura y filtramos las activas
+    votaciones.value = (dataV.votaciones || dataV.data || dataV || []).filter((v) => v.estado === 'activa')
+
   } catch (err) {
-    console.error(err)
+    console.error("Error cargando el Dashboard:", err)
   }
 }
 

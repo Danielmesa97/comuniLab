@@ -9,12 +9,27 @@ class Incidencia extends Model
 {
     use HasFactory;
 
-    // Estos son los únicos campos que permitiremos rellenar cuando alguien envíe el formulario
     protected $fillable = [
         'titulo',
         'descripcion',
+        'foto',
         'estado',
         'user_id',
-        // 'comunidad_id', 
+        'comunidad_id',
     ];
+
+    protected $attributes = [
+        'estado' => 'pendiente',
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    // 🔗 RELACIÓN CON USUARIO
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

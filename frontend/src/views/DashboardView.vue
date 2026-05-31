@@ -1,144 +1,317 @@
 <template>
-    <div class="dashboard-container">
-        <header class="dashboard-header">
-            <div class="gretting">
-                <h1> Bienvenido</h1>
-                <p> Tu comunidad esta al dia</p>
-                <div class="header-actions">
-                    <button class="icon-btn">🔔</button>
-                </div>
-            </div>
-        </header>
-        <main class="main-container">
-            <section class="panel">
-                <h2> No hay actividades</h2>
-                <p> Las incidencias reportadas y las votaciones apareceran aquí</p>
-            </section>
-        </main>
-        <nav class="bottom-nav">
-            <router-link to="/dashboard" class="nav-item">
-                <span class="icon">🏠</span>
-                <span> Inicio</span> 
-            </router-link>
-            <router-link to="/incidencias" class="nav-item">
-                <span class="icon">⚠️</span>
-                <span>Incidencias</span>
-            </router-link>
-            <router-link to="/incidencias" class="nav-item">
-                <span class="icon">🗳️</span>
-                <span>Votaciones</span>
-            </router-link>
-            <router-link to="/incidencias" class="nav-item">
-                <span class="icon">👤</span>
-                <span>Perfil</span>
-            </router-link>
-        </nav>
-    </div>
+  <div class="dashboard-container">
+    <!-- HEADER -->
+    <header class="dashboard-header">
+      <div class="gretting">
+        <h1>Bienvenido</h1>
+        <p>Tu comunidad está al día</p>
+      </div>
+
+      <!--  ACCIONES DERECHA -->
+      <div class="header-actions">
+        <button class="icon-btn">🔔</button>
+
+        <button class="logout-btn" @click="logout">🚪</button>
+      </div>
+    </header>
+
+    <!-- CONTENIDO -->
+    <main class="main-container">
+      <!-- ANUNCIOS -->
+      <section class="card">
+        <h2>📢 Últimos anuncios</h2>
+
+        <div v-if="anuncios.length === 0">
+          <p>No hay anuncios activos</p>
+        </div>
+
+        <div v-for="a in anuncios" :key="a.id" class="mini-item">
+          <strong>{{ a.titulo }}</strong>
+          <p>{{ a.descripcion }}</p>
+        </div>
+
+        <router-link
+          :to="
+            isModoComunidad
+              ? '/superadmin/comunidad/anuncios'
+              : '/anuncios'
+          "
+          class="ver-mas"
+        >
+          Ver todos →
+      </router-link>
+      </section>
+
+      <!--  INCIDENCIAS -->
+      <section class="card">
+        <h2>⚠️ Últimas incidencias</h2>
+
+        <div v-if="incidencias.length === 0">
+          <p>No hay incidencias</p>
+        </div>
+
+        <div v-for="i in incidencias" :key="i.id" class="mini-item">
+          <strong>{{ i.titulo }}</strong>
+          <p>{{ i.descripcion }}</p>
+        </div>
+
+        <router-link
+          :to="
+            isModoComunidad
+              ? '/superadmin/comunidad/incidencias'
+              : '/incidencias'
+          "
+          class="ver-mas"
+        >
+        Ver todos →
+      </router-link>
+      </section>
+
+      <!-- VOTACIONES -->
+      <section class="card">
+        <h2>🗳️ Votaciones activas</h2>
+
+        <div v-if="votaciones.length === 0">
+          <p>No hay votaciones activas</p>
+        </div>
+
+        <div v-for="v in votaciones" :key="v.id" class="mini-item">
+          <strong>{{ v.titulo || v.nombre }}</strong>
+        </div>
+
+        <router-link
+          :to="
+            isModoComunidad
+              ? '/superadmin/comunidad/votaciones'
+              : '/votaciones'
+          "
+          class="ver-mas"
+        >
+        Ver todos →
+      </router-link>
+      </section>
+    </main>
+  </div>
 </template>
 
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { apiUrl } from '@/lib/api'
+
+const comunidadActiva =
+  localStorage.getItem('comunidad_activa')
+const router = useRouter()
+//asegurar la vista cuando es superadmin
+const isModoComunidad =
+  !!localStorage.getItem(
+    'superadmin_comunidad_id'
+  )
+
+const logout = () => {
+  const confirmar = confirm('¿Seguro que quieres cerrar sesión?')
+  if (!confirmar) return
+
+  localStorage.removeItem('auth_token')
+  localStorage.removeItem('user')
+
+  router.push('/').then(() => {
+    window.location.reload()
+  })
+}
+
+const anuncios = ref([])
+const incidencias = ref([])
+const votaciones = ref([])
+
+const token = localStorage.getItem('auth_token')
+
+const getData = async () => {
+  try {
+    // 1. ANUNCIOS (Le pasamos la cabecera de la comunidad)
+    const resA = await fetch(apiUrl('/api/anuncios'), {
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'X-Comunidad-Id': comunidadActiva
+      },
+    })
+    const dataA = await resA.json()
+    // Extraemos de forma segura
+    anuncios.value = dataA.anuncios || dataA.data || dataA || []
+
+    // 2. INCIDENCIAS (Le pasamos la cabecera de la comunidad)
+    const resI = await fetch(apiUrl('/api/incidencias'), {
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'X-Comunidad-Id': comunidadActiva
+      },
+    })
+    const dataI = await resI.json()
+    // Extraemos de forma segura
+    incidencias.value = dataI.incidencias || dataI.data || dataI || []
+
+    // 3. VOTACIONES (NO necesita la cabecera, el backend ya la saca de la vivienda)
+    const resV = await fetch(apiUrl('/api/votaciones'), {
+      headers: { 
+        'Authorization': `Bearer ${token}` 
+      },
+    })
+    const dataV = await resV.json()
+    // Extraemos de forma segura y filtramos las activas
+    votaciones.value = (dataV.votaciones || dataV.data || dataV || []).filter((v) => v.estado === 'activa')
+
+  } catch (err) {
+    console.error("Error cargando el Dashboard:", err)
+  }
+}
+
+onMounted(getData)
+</script>
+
 <style scoped>
-    .dashboard-container{
-        display:flex;
-        flex-direction: column;
-        width: 100%;
-        min-height: 100vh;
-        background-color: #f2f2f7;
-    }
-    .dashboard-header{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 5%;
-        background: white;
-        border-bottom: 2px solid #e5e5e5;
-    }
-    .gretting h1{
-        font-size: 24px; 
-        font-weight: 600px; 
-        margin: 0; 
-    }
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f2f2f7;
+}
 
-    .gretting p{
-        font-size: 12px; 
-        margin: 3px 0 0; color: 
-        #8e8e8e;
-    }
-    .icon-btn{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 30px;
-        width: 30px;
-        font-size: 15px;
-        background: #f2f2f7;
-        border-radius: 50%;
-        cursor: pointer;
+/* HEADER */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 5%;
+  background: white;
+  border-bottom: 2px solid #e5e5e5;
+}
 
-    }
-    .main-container{
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        padding: 20px 5%;
-        box-sizing: border-box;
-        
-    }
-    .panel{
-        text-align:center;
-        padding: 40px 20px;
-        border-radius: 20px;
-        background: white;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        width: 100%;
-    }
+.gretting h1 {
+  font-size: 24px;
+  margin: 0;
+}
 
-    .panel h2{
-        font-size: 18px;
-        font-weight: 400px;
-        margin-bottom: 10px;
-    }
+.gretting p {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #8e8e8e;
+}
 
-    .panel p{
-        font-size:14px;
-        color:#8e8e8e;
-        max-width: 400px;
-        margin: 0 auto;
-    }
-    .bottom-nav{
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        height: 60px;
-        border-top: 2px, solid #e5e5e5;
-        background: white;
-        width: 100%;
-        position: sticky;
-        bottom: 0;
-    }
-    .nav-item{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-decoration: none;
-        color: #8e8e8e;
-        flex: 1;
-    }
-    .icon{
-        font-size: 20px;
-        margin-bottom: 5px;
-    }
+.icon-btn {
+  height: 35px;
+  width: 35px;
+  background: #f2f2f7;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
 
-    .nav-item span:last-child{
-        font-size: 12px;
-        font-weight: 500px;
-    }
-    /* Responsive en escritorio*/
-    @media (min-width: 1024px){
-        .dashboard-header, .main-container{         
-            padding-left: 10%;
-            padding-right: 10%;
-        }
-        
-    }
+.logout-btn {
+  height: 35px;
+  width: 35px;
+  background: #ffe5e5;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #ffcccc;
+  transform: scale(1.05);
+}
+
+/* CONTENIDO */
+.main-container {
+  flex: 1;
+  display: grid;
+  gap: 20px;
+  padding: 20px 5%;
+}
+
+/* 📱 móvil */
+@media (max-width: 768px) {
+  .main-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 💻 tablet */
+@media (min-width: 769px) {
+  .main-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 🖥️ desktop grande */
+@media (min-width: 1200px) {
+  .main-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* TARJETAS */
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  width: 100%;
+
+  max-height: 50vh; /* 🔥 clave */
+  overflow: auto; /* 🔥 scroll interno */
+
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+.card h2 {
+  margin-bottom: 10px;
+}
+
+/* ITEMS */
+.mini-item {
+  background: #f5f5f7;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+}
+
+.mini-item:hover {
+  transform: translateY(-2px);
+}
+
+.mini-item strong {
+  display: block;
+  font-size: 14px;
+}
+
+.mini-item p {
+  font-size: 12px;
+  color: #666;
+  margin-top: 3px;
+}
+
+/* LINK */
+.ver-mas {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #007aff;
+  text-decoration: none;
+}
+
+/* DESKTOP */
+@media (min-width: 1024px) {
+  .dashboard-header,
+  .main-container {
+    padding-left: 10%;
+    padding-right: 10%;
+  }
+}
 </style>

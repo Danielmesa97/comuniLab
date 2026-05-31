@@ -7,11 +7,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens; // 1. AÑADIMOS ESTA IMPORTACIÓN ARRIBA
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable; // 2. AÑADIMOS HasApiTokens AQUÍ
 
     /**
      * The attributes that are mass assignable.
@@ -22,6 +23,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'vivienda_id',
+         'activo'
     ];
 
     /**
@@ -33,6 +37,12 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+
+    public function vivienda()
+    {
+        return $this->belongsTo(Vivienda::class);
+    }   
 
     /**
      * Get the attributes that should be cast.
@@ -46,4 +56,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function votos()
+{
+    return $this->hasMany(Voto::class);
+}
+
+public function comunidades()
+{
+    return $this->belongsToMany(
+        Comunidad::class,
+        'comunidad_user'
+    )->withPivot('role');
+}
+
+
+
 }
